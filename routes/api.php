@@ -1,0 +1,84 @@
+<?php
+
+use App\Http\Controllers\Admin\BaiHat\BaiHatController;
+use App\Http\Controllers\Admin\CaSi\CaSiController;
+use App\Http\Controllers\Admin\Login\apiLoginAdmin;
+use App\Http\Controllers\Admin\Playlist\PlaylistController;
+use App\Http\Controllers\Admin\TheLoai\TheLoaiController;
+use App\Http\Controllers\User\TrangChu\TrangChuController;
+use App\Http\Controllers\User\ZingChart\ZingChartController;
+use App\Http\Controllers\User\BaiMoi\BaiMoiController;
+use App\Http\Controllers\User\ChuDe\ChuDeController;
+use Illuminate\Support\Facades\Route;
+
+/*Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');*/
+
+
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'auth'
+], function () {
+    Route::post('login', [apiLoginAdmin::class, 'getapiLoginAdmin']);
+
+    //TheLoai
+    Route::post('postTheLoai', [TheLoaiController::class, 'postTheLoai']);
+    Route::get('getListTheLoai', [TheLoaiController::class, 'getList']);
+    Route::post('postSuaTheLoai/{id}', [TheLoaiController::class, 'postCapNhatTheLoai']);
+    Route::get('thongTinTheLoai/{id}', [TheLoaiController::class, 'getTheloai']);
+    Route::delete('deleteTheLoai/{id}', [TheLoaiController::class, 'delete']);
+
+    //CaSi
+    Route::post('postCaSi', [CaSiController::class, 'postCaSi']);
+    Route::get('getListCaSi', [CaSiController::class, 'getList']);
+    Route::post('postSuaCaSi/{id}', [CaSiController::class, 'postCapNhatCaSi']);
+    Route::get('thongTinCaSi/{id}', [CaSiController::class, 'getCaSi']);
+    Route::delete('deleteCaSi/{id}', [CaSiController::class, 'delete']);
+
+    //BaiHat
+    Route::get('dsTheLoai', [BaiHatController::class, 'getTheLoai']);
+    Route::get('dsCaSi', [BaiHatController::class, 'getCaSi']);
+    Route::get('thongTinBaiHat/{id}', [BaiHatController::class, 'getBaiHat']);
+    Route::post('postBaiHat', [BaiHatController::class, 'postBaiHat']);
+    Route::get('getListBaiHat', [BaiHatController::class, 'getList']);
+    Route::post('postSuaBaiHat/{id}', [BaiHatController::class, 'postCapNhatBaiHat']);
+    Route::delete('deleteBaiHat/{id}', [BaiHatController::class, 'delete']);
+    Route::get('choosePlaylists', [BaiHatController::class, 'getPlaylist']);
+    Route::post('addBaiHatList', [BaiHatController::class, 'addBaiHatList']);
+
+    //Playlist
+    Route::get('thongTinPlaylist/{id}', [PlaylistController::class, 'getPlaylist']);
+    Route::post('postPlaylist', [PlaylistController::class, 'postPlaylist']);
+    Route::get('getListPlaylist', [PlaylistController::class, 'getList']);
+    Route::get('playlists/{id}', [PlaylistController::class, 'getSong']);
+    Route::delete('playlist/{playlist}/songs/{song}', [PlaylistController::class, 'deleteBaiHatOfPlaylist']);
+    Route::post('postSuaPlaylist/{id}', [PlaylistController::class, 'postCapNhatPlaylist']);
+    Route::delete('deletePlaylist/{id}', [PlaylistController::class, 'delete']);
+});
+
+Route::prefix('user')->group(function () {
+    //TrangChu
+    Route::get('getRandomSongs', [TrangChuController::class, 'getRandomSongs']);
+    Route::post('nextSongs', [TrangChuController::class, 'getNextSongs']);
+    Route::get('getPlaylist', [TrangChuController::class, 'getPlaylist']);
+    Route::get('getSonginPlaylist/{id}', [TrangChuController::class, 'getSonginPlaylist']);
+    Route::get('getNewSongs', [TrangChuController::class, 'getNewSongs']);
+    Route::post('/BaiHat/{id}/tangLuotXem', [TrangChuController::class, 'tangLuotXem']);
+    Route::get('/getTopBaiHat', [TrangChuController::class, 'getTopBaiHat']);
+    Route::get('/getSong', [TrangChuController::class, 'getSong']);
+    Route::get('/search/{query}', [TrangChuController::class, 'search1']);
+    Route::get('/search', [TrangChuController::class, 'search']);
+    Route::get('/getThongTinBaiHat/{id}', [TrangChuController::class, 'thongTinBaiHat']);
+    Route::get('/getRelatedSongs/{id}', [TrangChuController::class, 'getRelatedSongs']);
+    Route::get('/getThongTinCaSi/{id}', [TrangChuController::class, 'thongTinCaSi']);
+
+    //ZingChart
+    Route::get('/getTop10', [ZingChartController::class, 'zingChart']);
+    Route::get('/get10NewSongs', [BaiMoiController::class, 'baiMoi']);
+    //ChuDe
+    Route::get('/getPlaylistLofi', [ChuDeController::class, 'getPlaylistLofi']);
+    Route::get('/getPlaylistTrung', [ChuDeController::class, 'getPlaylistTrung']);
+    Route::get('/getPlaylistAuMy', [ChuDeController::class, 'getPlaylistAuMy']);
+    Route::get('/getPlaylistAll', [ChuDeController::class, 'getPlaylistAll']);
+});

@@ -1,0 +1,17 @@
+@import "tailwindcss";
+.stroke-white {
+    -webkit-text-stroke: 1px white;
+}
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: gray; /* Màu tím kéo */
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #2a1a40; /* Cùng màu nền trang, không còn thấy đường trắng */
+}
+
