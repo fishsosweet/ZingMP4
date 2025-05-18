@@ -1,5 +1,5 @@
 import { FaPlay } from "react-icons/fa";
-import {Link, useParams} from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getThongTinCaSi } from "../../services/User/TrangChuService.tsx";
 import { useMusic } from "../../contexts/MusicContext";
@@ -48,7 +48,13 @@ export default function ThongTinCaSi() {
                 anh: song.anh,
                 audio_url: song.audio_url,
                 lyrics: song.lyrics,
-                casi: { ten_casi: casi.ten_casi }
+                casi: {
+                    id: casi.id,
+                    ten_casi: casi.ten_casi,
+                    gioitinh: casi.gioitinh,
+                    mota: casi.mota,
+                    anh: casi.anh
+                }
             }));
             setPlaylist(songs);
             setCurrentSong(songs[0]);
@@ -64,7 +70,13 @@ export default function ThongTinCaSi() {
                 anh: song.anh,
                 audio_url: song.audio_url,
                 lyrics: song.lyrics,
-                casi: { ten_casi: casi.ten_casi }
+                casi: {
+                    id: casi.id,
+                    ten_casi: casi.ten_casi,
+                    gioitinh: casi.gioitinh,
+                    mota: casi.mota,
+                    anh: casi.anh
+                }
             };
             setPlaylist(casi.baihats.map(s => ({
                 id: s.id,
@@ -72,7 +84,13 @@ export default function ThongTinCaSi() {
                 anh: s.anh,
                 audio_url: s.audio_url,
                 lyrics: s.lyrics,
-                casi: { ten_casi: casi.ten_casi }
+                casi: {
+                    id: casi.id,
+                    ten_casi: casi.ten_casi,
+                    gioitinh: casi.gioitinh,
+                    mota: casi.mota,
+                    anh: casi.anh
+                }
             })));
             setCurrentSong(formattedSong);
             setIsPlaying(true);
@@ -99,12 +117,12 @@ export default function ThongTinCaSi() {
                         <p><span className="font-semibold text-white">Giới tính:</span> {casi.gioitinh}</p>
                         <p><span className="font-semibold text-white">Mô tả:</span> {casi.mota}</p>
                         <p><span
-                            className="font-semibold text-white">Ngày tham gia:</span> {new Date(casi.created_at).toLocaleDateString()}
+                            className="font-semibold text-white">Ngày tham gia:</span> {new Date(casi.created_at).toLocaleDateString('vi-VN')}
                         </p>
                     </div>
                     <button
                         onClick={handlePlayAll}
-                        className="bg-white text-purple-600 p-4 rounded-full hover:bg-purple-100 transition"
+                        className="bg-white text-purple-600 p-4 rounded-full hover:bg-purple-100 transition cursor-pointer"
                     >
                         <FaPlay size={20} />
                     </button>
@@ -112,7 +130,7 @@ export default function ThongTinCaSi() {
                 <div className="mt-12">
                     <h2 className="text-2xl font-bold mb-4">Bài Hát Nổi Bật</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Array.isArray(casi.baihats) && casi.baihats.map((song, index) => (
+                        {Array.isArray(casi.baihats) && casi.baihats.map((song) => (
                             <div key={song.id}>
                                 <div
                                     className="flex items-center justify-between hover:bg-[#2a2a3e] p-4 rounded-lg cursor-pointer"
@@ -126,17 +144,15 @@ export default function ThongTinCaSi() {
                                         />
                                         <div>
                                             <Link to={`/zingmp4/thong-tin/${song.id}`}>
-                                        <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">
-                                            {song.title}
-                                        </span>
+                                                <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">
+                                                    {song.title}
+                                                </span>
                                             </Link>
                                             <p className="text-sm text-gray-400">{casi.ten_casi}</p>
                                         </div>
                                     </div>
                                 </div>
-                                {index !== casi.baihats.length - 1 && (
-                                    <div className="border-b border-gray-700 opacity-30 mx-3"></div>
-                                )}
+
                             </div>
                         ))}
                     </div>

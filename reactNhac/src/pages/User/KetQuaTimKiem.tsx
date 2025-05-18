@@ -1,7 +1,10 @@
-import {Link, useSearchParams} from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../configs/axios.tsx";
 import { useMusic } from "../../contexts/MusicContext.tsx";
+import { FaHeart } from "react-icons/fa";
+import SongContextMenu from "../../components/User/SongContextMenu.tsx";
+import ToastNotification from "../../components/User/ToastNotification.tsx";
 
 export default function TimKiem() {
     const [searchParams] = useSearchParams();
@@ -10,6 +13,11 @@ export default function TimKiem() {
     const [loading, setLoading] = useState(false);
     const [currentPlaying, setCurrentPlaying] = useState<number | null>(null);
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
+    const [showContextMenu, setShowContextMenu] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [selectedSong, setSelectedSong] = useState<any>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         if (query) {
@@ -38,6 +46,32 @@ export default function TimKiem() {
         setCurrentSong(song);
         setPlaylist(songs);
         setIsPlaying(true);
+    };
+
+    const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setContextMenuPosition({
+            x: event.clientX + window.scrollX,
+            y: event.clientY + window.scrollY
+        });
+        setSelectedSong(song);
+        setShowContextMenu(true);
+    };
+
+    const handleCloseContextMenu = () => {
+        setShowContextMenu(false);
+        setSelectedSong(null);
+    };
+
+    const showToastNotification = (message: string) => {
+        setToastMessage(message);
+        setShowToast(true);
+    };
+
+    const hideToastNotification = () => {
+        setToastMessage(null);
+        setShowToast(false);
     };
 
     if (loading) {
@@ -76,14 +110,29 @@ export default function TimKiem() {
                                         className="w-14 h-14 rounded-lg object-cover"
                                         alt={baihat.title}
                                     />
+                                    <div
+                                        className="absolute  right-12  flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <button className="text-white hover:text-pink-500 cursor-pointer">
+                                            <FaHeart />
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleShowContextMenu(e, baihat)}
+                                            className="text-white hover:text-gray-400 cursor-pointer">
+                                            ⋮
+                                        </button>
+                                    </div>
                                     <div>
-                                        <Link  to={`/zingmp4/thong-tin/${baihat.id}`}>
-                                        <div className="font-semibold text-lg hover:text-[#9b4de0]">{baihat.title}</div>
+                                        <Link to={`/zingmp4/thong-tin/${baihat.id}`}>
+                                            <div
+                                                className="font-semibold text-lg hover:text-[#9b4de0]">{baihat.title}</div>
                                         </Link>
                                         <Link to={`/zingmp4/thong-tin-ca-si/${baihat.casi.id}`}>
-                                        <div className="text-sm text-gray-400 hover:text-[#9b4de0]">{baihat.casi?.ten_casi || "Hông rõ ca sĩ"}</div>
+                                            <div
+                                                className="text-sm text-gray-400 hover:text-[#9b4de0]">{baihat.casi?.ten_casi || "Hông rõ ca sĩ"}</div>
                                         </Link>
+
                                     </div>
+
                                 </div>
 
                             </div>
@@ -91,6 +140,22 @@ export default function TimKiem() {
                     </div>
                 </>
             )}
+
+            {showContextMenu && (
+                <SongContextMenu
+                    song={selectedSong}
+                    position={contextMenuPosition}
+                    onClose={handleCloseContextMenu}
+                    showToast={showToastNotification}
+                />
+            )}
+
+            <ToastNotification
+                message={toastMessage}
+                isVisible={showToast}
+                onClose={hideToastNotification}
+            />
+
         </div>
     );
 }

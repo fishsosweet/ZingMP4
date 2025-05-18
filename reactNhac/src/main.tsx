@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import PrivateRoute from '../src/services/PrivateRoute.tsx';
+import { PrivateRoute, PrivateRouteUser } from '../src/services/PrivateRoute.tsx';
 import TheLoai from '../src/pages/Admin/TheLoai/Them.tsx'
 import CaSi from '../src/pages/Admin/CaSi/Them.tsx'
 import BaiHat from "./pages/Admin/Nhac/Them.tsx";
@@ -29,6 +29,8 @@ import ChuDe from "./pages/User/ChuDe/ChuDe.tsx";
 import TimKiem from "./pages/User/KetQuaTimKiem.tsx";
 import ThongTinBaiHat from "./pages/User/ThongTinBaiHat.tsx";
 import ThongTinCaSi from "./pages/User/ThongTinCaSi.tsx";
+import DangNhap from "./pages/User/DangNhap/DangNhap.tsx";
+import ThuVien from "./pages/User/ThuVien/ThuVien.tsx";
 
 const router = createBrowserRouter([
     {
@@ -36,9 +38,21 @@ const router = createBrowserRouter([
         element: <LoginPage />,
     },
     {
+        path: "/login-user",
+        element: <DangNhap />,
+    },
+
+
+    {
         path: "/zingmp4",
         element: <UserLayout />,
         children: [
+            {
+                path: "thu-vien",
+                element: <PrivateRouteUser>
+                    <ThuVien />
+                </PrivateRouteUser>
+            },
             {
                 path: "",
                 element: <HomeUser />

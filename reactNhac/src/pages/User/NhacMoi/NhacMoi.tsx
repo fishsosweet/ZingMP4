@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import {FaHeart, FaPlay} from "react-icons/fa";
+import { FaHeart, FaPlay } from "react-icons/fa";
 import { useMusic } from "../../../contexts/MusicContext";
-import {Link} from "react-router-dom";
-import {get10NewSongs} from "../../../services/User/NhacMoi.tsx";
+import { Link } from "react-router-dom";
+import { get10NewSongs } from "../../../services/User/NhacMoi.tsx";
+import SongContextMenu from "../../../components/User/SongContextMenu.tsx";
+import ToastNotification from "../../../components/User/ToastNotification.tsx";
 
 interface Song {
     id: number;
@@ -13,16 +15,22 @@ interface Song {
     views: number;
     anh: string;
     casi: {
-        id: String;
+        id: number;
         ten_casi: string;
     };
     audio_url: string;
     lyrics: string;
 }
 
+
 export default function NhacMoi() {
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
     const [songs, setSongs] = useState<Song[]>([]);
+    const [showContextMenu, setShowContextMenu] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [selectedSong, setSelectedSong] = useState<any>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         const fetchTopSongs = async () => {
@@ -43,6 +51,32 @@ export default function NhacMoi() {
         setIsPlaying(true);
     };
 
+    const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setContextMenuPosition({
+            x: event.clientX + window.scrollX,
+            y: event.clientY + window.scrollY
+        });
+        setSelectedSong(song);
+        setShowContextMenu(true);
+    };
+
+    const handleCloseContextMenu = () => {
+        setShowContextMenu(false);
+        setSelectedSong(null);
+    };
+
+    const showToastNotification = (message: string) => {
+        setToastMessage(message);
+        setShowToast(true);
+    };
+
+    const hideToastNotification = () => {
+        setToastMessage(null);
+        setShowToast(false);
+    };
+
     return (
         <div className="bg-[#170f23] min-h-screen text-white p-15">
             <h1 className="text-5xl font-bold mb-6 flex items-center gap-4">
@@ -53,7 +87,7 @@ export default function NhacMoi() {
             </h1>
 
             <div className="space-y-2">
-                {songs.length >0 ? songs.map((song, index) => (
+                {songs.length > 0 ? songs.map((song, index) => (
                     <div>
                         <div
                             key={song.id}
@@ -67,29 +101,30 @@ export default function NhacMoi() {
                                 onClick={() => handlePlaySong(song)}
                             />
                             <div className="flex-1">
-                                <Link  to={`/zingmp4/thong-tin/${song.id}`}>
+                                <Link to={`/zingmp4/thong-tin/${song.id}`}>
                                     <div className="font-semibold hover:text-[#9b4de0]">{song.title}</div>
                                 </Link>
-                                <Link to={`/zingmp4/thong-tin-ca-si/${song.casi.id}`} className="inline-block max-w-fit">
-                                        <span
-                                            className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{song.casi.ten_casi}</span>
+                                <Link to={`/zingmp4/thong-tin-ca-si/${song.casi.id}`}
+                                    className="inline-block max-w-fit">
+                                    <span
+                                        className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{song.casi.ten_casi}</span>
                                 </Link>
                             </div>
-                            <button className="text-white hover:text-pink-500 cursor-pointer">
-                                <FaHeart/>
+                            <button className="text-white hover:text-pink-500 cursor-pointer mr-2">
+                                <FaHeart />
                             </button>
-                            <button
-                                className="ml-4 text-white hover:text-purple-700 cursor-pointer"
-                                onClick={() => handlePlaySong(song)}
+                            <button className="text-white hover:text-gray-400 cursor-pointer"
+                                onClick={(e) => handleShowContextMenu(e, song)}
                             >
-                                <FaPlay/>
+                                ⋮
                             </button>
+
                         </div>
-                    {index !== songs.length - 1 && (
-                        <div className="border-b border-gray-700 opacity-30 mx-3"></div>
-                    )}
+                        {index !== songs.length - 1 && (
+                            <div className="border-b border-gray-700 opacity-30 mx-3"></div>
+                        )}
                     </div>
-                    )):
+                )) :
                     Array.from({ length: 10 }).map((_, index) => (
                         <div
                             key={index}
@@ -110,6 +145,22 @@ export default function NhacMoi() {
                 }
 
             </div>
+
+            {showContextMenu && (
+                <SongContextMenu
+                    song={selectedSong}
+                    position={contextMenuPosition}
+                    onClose={handleCloseContextMenu}
+                    showToast={showToastNotification}
+                />
+            )}
+
+            <ToastNotification
+                message={toastMessage}
+                isVisible={showToast}
+                onClose={hideToastNotification}
+            />
+
         </div>
     );
 }

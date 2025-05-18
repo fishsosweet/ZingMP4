@@ -2,11 +2,11 @@ import axiosInstance from "../../../configs/axios.tsx";
 
 type post = {
     tenPlaylist: string,
-    trangThai: boolean,
+    trangThai: string,
     anh: File,
     theloai_id: string,
-    ngayTao?: Date,
-    ngayCapNhat?: Date,
+    ngayTao?: string,
+    ngayCapNhat?: string,
 }
 const postPlaylist = async (playList: post) => {
     try {
@@ -25,10 +25,10 @@ const postPlaylist = async (playList: post) => {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
 
@@ -38,24 +38,27 @@ const getThongTinPlaylist = async (id: number) => {
         return res.data
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
-const postSuaPlaylist = async (playlist: post,id: number) => {
+const postSuaPlaylist = async (playlist: post, id: number) => {
     try {
         const formData = new FormData();
         formData.append('tenPlaylist', playlist.tenPlaylist);
         formData.append('theloai_id', playlist.theloai_id);
-        formData.append('trangThai', playlist.trangThai.toString());
-        formData.append('anh', playlist.anh);
-        // @ts-ignore
-        formData.append('ngayCapNhat', casi.ngayCapNhat);
-        const response = await axiosInstance.post(`/auth/postSuaPlaylist/${id}`,  formData, {
+        formData.append('trangThai', playlist.trangThai);
+        if (playlist.anh) {
+            formData.append('anh', playlist.anh);
+        }
+        if (playlist.ngayCapNhat) {
+            formData.append('ngayCapNhat', playlist.ngayCapNhat);
+        }
+        const response = await axiosInstance.post(`/auth/postSuaPlaylist/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
         })
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         throw error.response?.data?.error
     }
@@ -96,4 +99,4 @@ const getBaiHatOfPlaylist = async (id: number) => {
 };
 
 
-export {postPlaylist, getListPlaylist,postSuaPlaylist,deletePlaylist,getThongTinPlaylist,getBaiHatOfPlaylist,deleteBaiHatOfPlaylist};
+export { postPlaylist, getListPlaylist, postSuaPlaylist, deletePlaylist, getThongTinPlaylist, getBaiHatOfPlaylist, deleteBaiHatOfPlaylist };

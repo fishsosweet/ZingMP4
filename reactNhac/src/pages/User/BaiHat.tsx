@@ -5,19 +5,20 @@ import {
     FaStepForward, FaVolumeUp
 } from "react-icons/fa";
 import { FiMoreHorizontal } from "react-icons/fi";
-import {MdOutlineLyrics, MdOutlinePlaylistPlay} from "react-icons/md";
+import { MdOutlineLyrics, MdOutlinePlaylistPlay } from "react-icons/md";
 import { loadYouTubeAPI } from "../../services/Admin/APIAudioSong.tsx";
 import { getDSPhat, tangLuotXem } from "../../services/User/TrangChuService.tsx";
 import { useMusic } from "../../contexts/MusicContext";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface Song {
     id: number;
     title: string;
     anh: string;
     casi: {
-        id: string;
-        ten_casi: string };
+        id: number;
+        ten_casi: string
+    };
     audio_url: string;
     lyrics: string;
 }
@@ -271,7 +272,7 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
     };
 
     const handleNext = () => {
-       if (currentIndex < queue.length - 1) {
+        if (currentIndex < queue.length - 1) {
             setCurrentIndex(prev => prev + 1);
         } else {
             handleSongEnd();
@@ -311,11 +312,13 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
                 />
                 <div className="flex flex-col">
                     <Link to={`/zingmp4/thong-tin/${currentSong.id}`}>
-                    <h3 className="text-white font-semibold truncate max-w-[150px] hover:text-[#9b4de0]">{currentSong.title}</h3>
+                        <h3 className="text-white font-semibold truncate max-w-[150px] hover:text-[#9b4de0]">{currentSong.title}</h3>
                     </Link>
+
                     <Link to={`/zingmp4/thong-tin-ca-si/${currentSong.casi.id}`}>
-                    <p className="text-sm text-gray-400 truncate max-w-[150px] hover:text-[#9b4de0]">{currentSong.casi?.ten_casi}</p>
+                        <p className="text-sm text-gray-400 truncate max-w-[150px] hover:text-[#9b4de0]">{currentSong.casi.ten_casi}</p>
                     </Link>
+
                 </div>
                 <button className="text-white text-xl ml-2 hover:text-pink-500 transition-colors cursor-pointer">
                     <FaHeart />
@@ -452,7 +455,11 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
                                     />
                                     <div className="flex-1">
                                         <h3 className="text-white font-medium truncate">{song.title}</h3>
-                                        <p className="text-sm text-gray-400 truncate">{song.casi.ten_casi}</p>
+                                        {song.casi && song.casi.id ? (
+                                            <p className="text-sm text-gray-400 truncate">{song.casi.ten_casi}</p>
+                                        ) : (
+                                            <p className="text-sm text-gray-400 truncate">Không rõ ca sĩ</p>
+                                        )}
                                     </div>
                                     {index === currentIndex && isPlaying && (
                                         <FaPlay className="text-purple-500" />

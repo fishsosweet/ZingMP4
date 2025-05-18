@@ -17,20 +17,21 @@ const LoginPage = () => {
     const login: SubmitHandler<Inputs> = async (data) => {
         try {
             const res = await loginAdmin(data);
-            // Kiểm tra response và lưu token vào localStorage
             if (res && res.access_token) {
-                localStorage.setItem("token", res.access_token);
-                const expiresIn = res.expires_in * 1000; // Thời gian hết hạn (ms)
+                localStorage.setItem("admin_token", res.access_token);
+                const expiresIn = res.expires_in * 1000;
                 const expirationTime = new Date().getTime() + expiresIn;
-                localStorage.setItem("token_expiry", expirationTime.toString());
+                localStorage.setItem("admin_token_expiry", expirationTime.toString());
                 axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${res.access_token}`;
-                navigate("/admin"); // Chuyển hướng tới trang user sau khi đăng nhập
+                navigate("/admin", { replace: true });
             }
-        } catch (error:any) {
+        } catch (error: any) {
             if (error.response && error.response.status === 401) {
                 setLoginError("Tài khoản hoặc mật khẩu không đúng");
+            } else if (error.response && error.response.status === 403) {
+                setLoginError(error.response.data.error || "Tài khoản không có quyền truy cập vào trang admin");
             } else {
-                setLoginError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+                setLoginError("Có lỗi xảy ra, vui lòng thử lại sau");
             }
         }
     };

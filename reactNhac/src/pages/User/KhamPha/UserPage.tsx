@@ -15,6 +15,8 @@ import {
 import dayjs from 'dayjs';
 import { XAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { useMusic } from "../../../contexts/MusicContext";
+import SongContextMenu from "../../../components/User/SongContextMenu.tsx";
+import ToastNotification from "../../../components/User/ToastNotification.tsx";
 
 const colors = ['#f87171', '#60a5fa', '#34d399'];
 
@@ -26,6 +28,11 @@ export default function HomeUser() {
     const [newReleases, setNewReleases] = useState<any[]>([]);
     const [topSongs, setTopSongs] = useState<any[]>([]);
     const [barData, setBarData] = useState<any[]>([]);
+    const [showContextMenu, setShowContextMenu] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [selectedSong, setSelectedSong] = useState<any>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         const fetchTopSongs = async () => {
@@ -125,6 +132,32 @@ export default function HomeUser() {
         }
     };
 
+    const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setContextMenuPosition({
+            x: event.clientX + window.scrollX,
+            y: event.clientY + window.scrollY
+        });
+        setSelectedSong(song);
+        setShowContextMenu(true);
+    };
+
+    const handleCloseContextMenu = () => {
+        setShowContextMenu(false);
+        setSelectedSong(null);
+    };
+
+    const showToastNotification = (message: string) => {
+        setToastMessage(message);
+        setShowToast(true);
+    };
+
+    const hideToastNotification = () => {
+        setToastMessage(null);
+        setShowToast(false);
+    };
+
     return (
         <div className="p-15 bg-[#170f23] text-white">
             {/*<section className="mb-10">*/}
@@ -216,7 +249,9 @@ export default function HomeUser() {
                                     <button className="text-white hover:text-pink-500 cursor-pointer">
                                         <FaHeart />
                                     </button>
-                                    <button className="text-white hover:text-gray-400 cursor-pointer">
+                                    <button
+                                        onClick={(e) => handleShowContextMenu(e, item)}
+                                        className="text-white hover:text-gray-400 cursor-pointer">
                                         ⋮
                                     </button>
                                 </div>
@@ -300,7 +335,7 @@ export default function HomeUser() {
                     </Link>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                    {newReleases.length > 0 ? newReleases.map((item) => (
+                    {newReleases.length > 0 ? newReleases.slice(0, 9).map((item) => (
                         <div key={item.id}
                             className="group relative flex items-center gap-5 hover:bg-[#2a213a] rounded-md transition duration-300">
                             <div className="relative group cursor-pointer m-2 w-[60px] h-[60px]">
@@ -323,7 +358,7 @@ export default function HomeUser() {
                                         <span
                                             className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">{item.title}</span>
                                     </Link>
-                                    <Link  to={`/zingmp4/thong-tin-ca-si/${item.casi.id}`} className="inline-block max-w-fit">
+                                    <Link to={`/zingmp4/thong-tin-ca-si/${item.casi.id}`} className="inline-block max-w-fit">
                                         <span
                                             className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{item.casi.ten_casi}</span>
                                     </Link>
@@ -340,7 +375,9 @@ export default function HomeUser() {
                                 <button className="text-white hover:text-pink-500 cursor-pointer">
                                     <FaHeart />
                                 </button>
-                                <button className="text-white hover:text-gray-400 cursor-pointer">
+                                <button
+                                    onClick={(e) => handleShowContextMenu(e, item)}
+                                    className="text-white hover:text-gray-400 cursor-pointer">
                                     ⋮
                                 </button>
                             </div>
@@ -378,8 +415,8 @@ export default function HomeUser() {
                                 <img src={`http://127.0.0.1:8000/${song.anh}`} alt={song.title}
                                     className="w-12 h-12 rounded-md object-cover" />
                                 <div className="flex-1">
-                                    <Link  to={`/zingmp4/thong-tin/${song.id}`}>
-                                    <div className="font-semibold">{song.title}</div>
+                                    <Link to={`/zingmp4/thong-tin/${song.id}`}>
+                                        <div className="font-semibold">{song.title}</div>
                                     </Link>
                                     <Link to={`/zingmp4/thong-tin-ca-si/${song.casi.id}`} className="inline-block max-w-fit">
                                         <div
@@ -443,6 +480,21 @@ export default function HomeUser() {
                     </div>
                 </div>
             </section>
+
+            {showContextMenu && (
+                <SongContextMenu
+                    song={selectedSong}
+                    position={contextMenuPosition}
+                    onClose={handleCloseContextMenu}
+                    showToast={showToastNotification}
+                />
+            )}
+
+            <ToastNotification
+                message={toastMessage}
+                isVisible={showToast}
+                onClose={hideToastNotification}
+            />
 
         </div>
     );

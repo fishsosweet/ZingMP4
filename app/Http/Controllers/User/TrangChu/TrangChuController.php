@@ -33,14 +33,14 @@ class TrangChuController extends Controller
         $songs = Baihat::whereNotIn('id', $exclude)
             ->inRandomOrder()
             ->limit(1)
-            ->with('casi')
+            ->with(['casi:id,ten_casi'])
             ->get();
 
         return response()->json($songs);
     }
     public function getSonginPlaylist($id)
     {
-        $playlist = Playlist::with('baihats.casi')->find($id);
+        $playlist = Playlist::with(['baihats.casi:id,ten_casi'])->find($id);
         if ($playlist) {
             return response()->json($playlist->baihats);
         } else {
@@ -51,7 +51,7 @@ class TrangChuController extends Controller
     public function getNewSongs()
     {
         try {
-            $songs = BaiHat::with('casi')
+            $songs = BaiHat::with(['casi:id,ten_casi'])
                 ->orderBy('created_at', 'desc')
                 ->limit(12)
                 ->get();
@@ -72,7 +72,7 @@ class TrangChuController extends Controller
 
     public function getTopBaiHat()
     {
-        $topSongs = BaiHat::with('casi')
+        $topSongs = BaiHat::with(['casi:id,ten_casi'])
             ->orderByDesc('luotxem')
             ->take(3)
             ->get();
@@ -97,7 +97,7 @@ class TrangChuController extends Controller
                         $q->where('ten_casi', 'LIKE', "%{$query}%");
                     });
             })
-            ->with('casi')
+            ->with(['casi:id,ten_casi'])
             ->get();
 
         return response()->json($songs);
@@ -105,7 +105,7 @@ class TrangChuController extends Controller
 
     public function search1($query)
     {
-        $results = BaiHat::with('casi')
+        $results = BaiHat::with(['casi:id,ten_casi'])
             ->where('title', 'LIKE', "%{$query}%")
             ->orWhereHas('casi', function ($q) use ($query) {
                 $q->where('ten_casi', 'LIKE', "%{$query}%");
@@ -113,13 +113,13 @@ class TrangChuController extends Controller
             ->limit(10)
             ->get();
 
-        return response()->json($results); // <- trả về mảng luôn
+        return response()->json($results);
     }
 
 
     public function thongTinBaiHat($id)
     {
-        $baihat = Baihat::with(['casi', 'theloai'])->find($id);
+        $baihat = Baihat::with(['casi:id,ten_casi', 'theloai'])->find($id);
         if (!$baihat) {
             return response()->json(['message' => 'Bài hát hông tồn tại'], 404);
         }
@@ -138,21 +138,21 @@ class TrangChuController extends Controller
 
     public function getRelatedSongs($id)
     {
-        $currentSong = Baihat::with(['casi', 'theloai'])->find($id);
+        $currentSong = Baihat::with(['casi:id,ten_casi', 'theloai'])->find($id);
         if (!$currentSong) {
             return response()->json(['message' => 'Bài hát không tồn tại'], 404);
         }
 
         $songsByArtist = Baihat::where('casi_id', $currentSong->casi_id)
             ->where('id', '!=', $id)
-            ->with(['casi', 'theloai'])
+            ->with(['casi:id,ten_casi', 'theloai'])
             ->limit(5)
             ->get();
 
         if ($songsByArtist->isEmpty()) {
             $songsByGenre = Baihat::where('theloai_id', $currentSong->theloai_id)
                 ->where('id', '!=', $id)
-                ->with(['casi', 'theloai'])
+                ->with(['casi:id,ten_casi', 'theloai'])
                 ->limit(5)
                 ->get();
             return response()->json($songsByGenre);

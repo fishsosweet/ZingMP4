@@ -1,9 +1,15 @@
-import { useState } from 'react';
-import { FaHome, FaStar, FaUsers, FaSignOutAlt,FaMusic,FaMicrophone } from 'react-icons/fa';
-import {MdOutlineWorkspacePremium, MdQueueMusic} from 'react-icons/md';
-import {Link} from "react-router-dom";
+import {  useState } from 'react';
+import { FaHome, FaStar, FaUsers, FaSignOutAlt, FaMusic, FaMicrophone } from 'react-icons/fa';
+import { MdOutlineWorkspacePremium, MdQueueMusic } from 'react-icons/md';
+import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
-import {logout} from '../../services/AuthServices'
+import { logout } from '../../services/AuthServices'
+// import axiosInstance from "../../../configs/axios.tsx";
+//
+// interface AdminProfile {
+//     image: string;
+// }
+
 const SideBar = () => {
     const [isCategoriesOpen, setCategoriesOpen] = useState(false);
     const [isSliderOpen, setSliderOpen] = useState(false);
@@ -11,8 +17,23 @@ const SideBar = () => {
     const [isUsersOpen, setUsersOpen] = useState(false);
     const [isPlaylistOpen, setPlaylistOpen] = useState(false);
     const [isVipOpen, setVipOpen] = useState(false);
-    const navigate=useNavigate();
-    const logOut=()=>{
+    const navigate = useNavigate();
+    // const [admin, setAdmin] = useState<AdminProfile | null>(null);
+    //
+    // const getAdmin = async () => {
+    //     try {
+    //         const res = await axiosInstance.get('/auth/getAdminProfile');
+    //         setAdmin(res.data);
+    //     } catch (error) {
+    //         console.error('Error fetching admin profile:', error);
+    //     }
+    // }
+    //
+    // useEffect(() => {
+    //     getAdmin();
+    // }, []);
+
+    const logOut = () => {
         logout();
         navigate('/login-admin');
     }
@@ -28,10 +49,22 @@ const SideBar = () => {
     return (
         <div className="w-86 min-h-screen bg-gray-800 text-white p-4">
             <h2 className="text-center text-3xl font-bold py-4">Admin</h2>
+            {/*{admin ? (*/}
+            {/*    <div className="flex justify-center mb-4">*/}
+            {/*        <img*/}
+            {/*            src={`http://127.0.0.1:8000/${admin.image}`}*/}
+            {/*            alt="Admin profile"*/}
+            {/*            className="w-15 h-15 rounded-full object-cover"*/}
+
+            {/*        />*/}
+            {/*    </div>*/}
+            {/*) : (*/}
+            {/*    <p className="text-center text-gray-400">Không có ảnh</p>*/}
+            {/*)}*/}
             <ul className="space-y-5">
                 <li>
                     <div className="flex items-center space-x-2 p-3 hover:bg-gray-700 rounded">
-                        <FaHome/>
+                        <FaHome />
                         <Link to="/admin" className="block p-2 rounded"><span>Trang chính</span></Link>
                     </div>
                 </li>
@@ -44,7 +77,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <FaStar/>
+                        <FaStar />
                         <span>Thể loại</span>
                     </button>
                     {isCategoriesOpen && (
@@ -68,7 +101,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <FaMicrophone/>
+                        <FaMicrophone />
                         <span>Ca sĩ</span>
                     </button>
                     {isSingerOpen && (
@@ -91,7 +124,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <FaMusic/>
+                        <FaMusic />
                         <span>Bài hát</span>
                     </button>
                     {isSliderOpen && (
@@ -116,7 +149,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <MdQueueMusic/>
+                        <MdQueueMusic />
                         <span>Playlist</span>
                     </button>
                     {isPlaylistOpen && (
@@ -140,7 +173,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <FaUsers/>
+                        <FaUsers />
                         <span>Quản lý người dùng</span>
                     </button>
                     {isUsersOpen && (
@@ -161,7 +194,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <MdOutlineWorkspacePremium/>
+                        <MdOutlineWorkspacePremium />
                         <span>Gói VIP</span>
                     </button>
                     {isVipOpen && (
@@ -181,7 +214,7 @@ const SideBar = () => {
                         }}
                         className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
                     >
-                        <FaSignOutAlt/>
+                        <FaSignOutAlt />
                         <span>Đăng xuất</span>
                     </button>
                 </li>

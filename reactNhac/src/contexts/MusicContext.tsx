@@ -6,6 +6,7 @@ interface Song {
     title: string;
     anh: string;
     casi: {
+        id: number;
         ten_casi: string;
     };
     audio_url: string;
@@ -17,7 +18,7 @@ interface MusicContextType {
     playlist: Song[];
     isPlaying: boolean;
     currentTime: number;
-    setCurrentSong: (song: Song | null) => void;
+    setCurrentSong: (song: Song) => void;
     setPlaylist: (playlist: Song[]) => void;
     setIsPlaying: (isPlaying: boolean) => void;
     setCurrentTime: (time: number) => void;

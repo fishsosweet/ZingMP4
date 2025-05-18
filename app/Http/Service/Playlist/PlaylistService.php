@@ -87,6 +87,7 @@ class PlaylistService extends Controller
     public function list()
     {
         $playlist = Playlist::with('user:id,name')
+            ->where('user_id', auth('api')->id())
             ->select('id', 'ten_playlist', 'trangthai', 'anh', 'user_id', 'updated_at')
             ->paginate(10);
 

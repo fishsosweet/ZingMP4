@@ -116,7 +116,7 @@ export default function ThongTinBaiHat() {
             </div>
 
             {relatedSongs.length > 0 && (
-                <div className="mt-12">
+                <div className="mt-12 ">
                     <h4 className="font-semibold mb-6 text-xl">
                         {relatedSongs[0].casi.id === baiHat.casi.id
                             ? "Các bài hát khác của ca sĩ"
@@ -146,7 +146,8 @@ export default function ThongTinBaiHat() {
                                     </button>
                                 </div>
                                 <Link to={`/zingmp4/thong-tin/${song.id}`}>
-                                    <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">
+                                    <span  className="font-semibold hover:text-[#9b4de0] text-[18px] truncate block max-w-[190px] whitespace-nowrap overflow-hidden"
+                                           title={song.title}>
                                         {song.title}
                                     </span>
                                 </Link>
