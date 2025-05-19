@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\User\ThongTinUser;
 
 use App\Http\Controllers\Controller;
+use App\Models\Baihat;
 use App\Models\Playlist;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ThongTinUser extends Controller
 {
@@ -51,8 +54,6 @@ class ThongTinUser extends Controller
                     'error' => 'Không tìm thấy playlist'
                 ], 404);
             }
-
-            // Kiểm tra xem playlist có thuộc về user đang đăng nhập không
             $user = auth('api')->user();
             if ($playlist->user_id !== $user->id) {
                 return response()->json([
@@ -81,4 +82,40 @@ class ThongTinUser extends Controller
             ], 500);
         }
     }
+    public function getLikedSongs($userId)
+    {
+        $user = User::findOrFail($userId);
+        $likedSongs = $user->favoriteSongs()->get();
+
+        return response()->json($likedSongs);
+    }
+
+
+    public function deleteLike($userId, $songId)
+    {
+        $user = User::findOrFail($userId);
+        $user->favoriteSongs()->detach($songId);
+        return response()->json(['message' => 'Đã xóa bài hát khỏi danh sách yêu thích']);
+    }
+
+    public function addLike(Request $request)
+    {
+        $user = User::findOrFail($request->user_id);
+        $user->favoriteSongs()->syncWithoutDetaching([$request->song_id]);
+        $song = Baihat::findOrFail($request->song_id);
+        $song->increment('luotthich');
+        return response()->json(['message' => 'Đã thêm bài hát vào danh sách yêu thích']);
+    }
+
+    public function getLikedSongsofUser(Request $request)
+    {
+        $songIds = $request->input('song_ids');
+
+        $songs = Baihat::with('casi')->whereIn('id', $songIds)->get();
+
+        return response()->json($songs);
+    }
+
+
+
 }

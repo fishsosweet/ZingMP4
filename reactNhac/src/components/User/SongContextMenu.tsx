@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axiosInstance from '../../../configs/axios.tsx';
 import { FaHeart } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { useLikedSongs } from '../../contexts/LikedSongsContext';
 
 interface Song {
     id: number;
@@ -22,20 +24,20 @@ interface SongContextMenuProps {
     song: Song | null;
     position: { x: number; y: number };
     onClose: () => void;
-    showToast: (message: string) => void;
 }
 
 const SongContextMenu: React.FC<SongContextMenuProps> = ({
     song,
     position,
     onClose,
-    showToast,
 }) => {
+    const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
     const [showPlaylistSubMenu, setShowPlaylistSubMenu] = useState(false);
     const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
     const [loadingPlaylists, setLoadingPlaylists] = useState(false);
     const [errorPlaylists, setErrorPlaylists] = useState<string | null>(null);
+    const { isLiked, toggleLike, isLoading } = useLikedSongs();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -84,24 +86,19 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
         if (!song) return;
 
         try {
-
             const response = await axiosInstance.post('/auth/addBaiHatList', {
                 playlist_id: playlistId,
                 song_id: song.id,
             });
 
-            if (response.data.success) {
-                showToast('Đã thêm bài hát vào playlist thành công!');
+            if (response.data.status === 'error') {
+                alert('Bài hát đã nằm trong playlist');
             } else {
-                showToast('Có lỗi xảy ra khi thêm bài hát vào playlist.');
+                alert('Thêm bài hát vào playlist thành công');
             }
+
         } catch (error: any) {
-            if (error.response && error.response.status === 409) {
-                showToast('Bài hát đã tồn tại trong playlist này.');
-            } else {
-                console.error('Lỗi khi thêm bài hát vào playlist:', error);
-                showToast('Có lỗi xảy ra khi thêm bài hát vào playlist.');
-            }
+            alert('Bài hát đã nằm trong playlist');
         } finally {
             onClose();
         }
@@ -115,14 +112,27 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
         setShowPlaylistSubMenu(!showPlaylistSubMenu);
     };
 
-    // Dummy function for liking (replace with actual logic)
-    const handleLikeClick = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent closing the menu
-        console.log('Like button clicked for song:', song?.title);
-        // Implement like logic here
-        // onClose(); // Close menu after action (optional)
-    };
+    const handleLikeClick = async (event: React.MouseEvent) => {
+        event.stopPropagation();
 
+        const token = localStorage.getItem('user_token');
+        const userInfo = localStorage.getItem('user_info');
+
+        if (!token || !userInfo) {
+            navigate('/login-user');
+            onClose();
+            return;
+        }
+
+        if (!song) return;
+
+        try {
+            await toggleLike(song.id);
+        } catch (error) {
+            console.error('Error toggling like:', error);
+            alert('Có lỗi xảy ra khi thực hiện thao tác');
+        }
+    };
 
     if (!song) {
         return null;
@@ -131,7 +141,7 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
     const style: React.CSSProperties = {
         position: 'fixed',
         top: position.y,
-        left: position.x - 150, // Subtracting 150px to shift left
+        left: position.x - 350,
         backgroundColor: '#2a1a40',
         border: '1px solid #3f2c5a',
         borderRadius: '8px',
@@ -140,11 +150,11 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
         color: 'white',
         fontSize: '14px',
         minWidth: '200px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     };
 
     return (
         <div ref={menuRef} style={style}>
-            {/* Song Info Header */}
             <div className="flex items-center gap-3 px-4 py-2 border-b border-[#3f2c5a]">
                 <img
                     src={`http://127.0.0.1:8000/${song.anh}`}
@@ -157,13 +167,14 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
                 </div>
                 <button
                     onClick={handleLikeClick}
-                    className="text-white hover:text-pink-500 cursor-pointer text-lg"
+                    className={`text-lg cursor-pointer transition-colors duration-200 ${isLoading ? 'text-gray-500' : isLiked(song.id) ? 'text-red-500' : 'text-white hover:text-red-500'
+                        }`}
+                    disabled={isLoading}
                 >
                     <FaHeart />
                 </button>
             </div>
 
-            {/* Only "Thêm vào playlist" option */}
             <div
                 className="px-4 py-2 hover:bg-[#3f2c5a] cursor-pointer flex justify-between items-center"
                 onClick={handlePlaylistMenuClick}

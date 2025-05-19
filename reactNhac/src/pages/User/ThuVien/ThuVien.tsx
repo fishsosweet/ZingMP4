@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../../../../configs/axios.tsx';
 import { useMusic } from '../../../contexts/MusicContext';
+import { useLikedSongs } from '../../../contexts/LikedSongsContext';
+import { FaPlay } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 
 
@@ -10,24 +13,38 @@ interface Playlist {
     ten_playlist: string;
 }
 
+interface Song {
+    id: number;
+    title: string;
+    anh: string;
+    casi: {
+        id: number;
+        ten_casi: string;
+    };
+    audio_url: string;
+    lyrics: string;
+}
+
 const ThuVien = () => {
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
-    const [loading, setLoading] = useState(true);
-    const { setCurrentSong, setPlaylist } = useMusic();
+    const [loadingPlaylists, setLoadingPlaylists] = useState(true);
+    const [likedSongsDetails, setLikedSongsDetails] = useState<Song[]>([]);
+    const [loadingLikedSongsDetails, setLoadingLikedSongsDetails] = useState(true);
+
+    const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
+    const { likedSongs, isLoading: isLoadingLikedSongs } = useLikedSongs();
 
     const fetchPlaylists = async () => {
         try {
             const token = localStorage.getItem('user_token');
             if (!token) {
                 setPlaylists([]);
-                setLoading(false);
                 return;
             }
 
             const userInfo = localStorage.getItem('user_info');
             if (!userInfo) {
                 setPlaylists([]);
-                setLoading(false);
                 return;
             }
 
@@ -40,44 +57,83 @@ const ThuVien = () => {
         } catch (error) {
             console.error('Lỗi khi lấy danh sách playlist:', error);
         } finally {
-            setLoading(false);
+            setLoadingPlaylists(false);
+        }
+    };
+
+    const fetchLikedSongsDetails = async () => {
+        if (likedSongs.length === 0) {
+            setLikedSongsDetails([]);
+            setLoadingLikedSongsDetails(false);
+            return;
+        }
+        setLoadingLikedSongsDetails(true);
+        try {
+            const response = await axiosInstance.post('/user/getLikeSongsofUser', { song_ids: likedSongs });
+
+            if (response.data && Array.isArray(response.data)) {
+                const sortedSongs = likedSongs.map(id => response.data.find((song: Song) => song.id === id)).filter((song: Song | undefined) => song !== undefined) as Song[];
+                setLikedSongsDetails(sortedSongs);
+            } else {
+                setLikedSongsDetails([]);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy chi tiết bài hát đã thích:', error);
+            setLikedSongsDetails([]);
+        } finally {
+            setLoadingLikedSongsDetails(false);
         }
     };
 
     const handlePlaylistClick = async (playlistId: number) => {
         try {
             const response = await axiosInstance.get(`/user/playlist/${playlistId}/songs`);
-            if (response.data && response.data.length > 0) {
+            if (response.data && Array.isArray(response.data) && response.data.length > 0) {
                 setPlaylist(response.data);
                 setCurrentSong(response.data[0]);
+                setIsPlaying(true);
             }
         } catch (error) {
             console.error('Lỗi khi lấy danh sách bài hát:', error);
         }
     };
 
+    const handlePlayLikedSong = (song: Song) => {
+        setCurrentSong(song);
+        setPlaylist(likedSongsDetails);
+        setIsPlaying(true);
+    };
+
     useEffect(() => {
         fetchPlaylists();
     }, []);
+
+    useEffect(() => {
+        if (!isLoadingLikedSongs) {
+            fetchLikedSongsDetails();
+        }
+    }, [likedSongs, isLoadingLikedSongs]);
+
+    const overallLoading = loadingPlaylists || loadingLikedSongsDetails || isLoadingLikedSongs;
 
     return (
         <div className="bg-[#150D25] min-h-screen text-white p-15">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Thư viện</h1>
-                <a href="#" className="text-sm text-gray-400 hover:text-white">TẤT CẢ {'>'} </a>
+
             </div>
 
-            <div className="text-sm text-gray-400 mb-2 flex items-center gap-2">
+            <div className="text-sm text-gray-400 mb-2 flex items-center gap-2 mt-8">
                 <span className="uppercase">Playlist</span>
                 <button className="text-white text-xl font-bold">＋</button>
             </div>
 
-            {loading ? (
-                <div className="flex justify-center items-center h-40">
+            {overallLoading ? (
+                <div className="flex justify-center items-center h-20">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
                 </div>
             ) : playlists.length === 0 ? (
-                <p className="text-gray-400 italic text-center mt-10">Trống.</p>
+                <p className="text-gray-400 italic text-center mt-5">Trống.</p>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mt-5">
                     {playlists.map((playlist) => (
@@ -97,6 +153,64 @@ const ThuVien = () => {
                         </div>
                     ))}
                 </div>
+            )}
+            <div className="text-sm text-gray-400 mb-2 flex items-center gap-2 mt-8">
+                <span className="uppercase">Bài hát đã thích</span>
+            </div>
+
+            {overallLoading ? (
+                <div className="flex justify-center items-center h-20">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                </div>
+            ) : likedSongsDetails.length === 0 ? (
+                <p className="text-gray-400 italic text-center mt-5">Chưa có bài hát nào được thích.</p>
+            ) : (
+                <div className="w-full mt-5 divide-y divide-gray-800">
+                    {likedSongsDetails.map((song) => (
+                        <div
+                            key={song.id}
+                            className="flex items-center justify-between p-3 hover:bg-white/10 transition"
+                        >
+                            <div className="flex items-center gap-4 w-1/2">
+                                <img
+                                    src={`http://127.0.0.1:8000/${song.anh}`}
+                                    alt={song.title}
+                                    className="w-12 h-12 object-cover rounded cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePlayLikedSong(song);
+                                    }}
+                                />
+                                <div>
+                                    <Link to={`/zingmp4/thong-tin/${song.id}`}>
+                                        <h3 className="text-sm font-semibold hover:text-[#9b4de0] truncate max-w-[200px]">{song.title}</h3>
+                                    </Link>
+                                    {song.casi && song.casi.id ? (
+                                        <Link to={`/zingmp4/thong-tin-ca-si/${song.casi.id}`}>
+                                            <p className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{song.casi.ten_casi}</p>
+                                        </Link>
+                                    ) : (
+                                        <p className="text-xs text-gray-400">Hông rõ ca sĩ</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 w-1/6 justify-end">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePlayLikedSong(song);
+                                    }}
+                                    className="w-8 h-8 rounded-full border-2 border-purple-500 text-white flex items-center justify-center hover:bg-purple-600 cursor-pointer"
+                                >
+                                    <FaPlay size={14} className="ml-[1px]"/>
+                                </button>
+
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
             )}
         </div>
     );

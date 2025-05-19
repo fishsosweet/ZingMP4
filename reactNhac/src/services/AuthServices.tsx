@@ -1,4 +1,5 @@
 import axiosInstance from "../../configs/axios.tsx";
+import { useLikedSongs } from "../contexts/LikedSongsContext";
 
 type LoginAdmin = {
     email: string,
@@ -26,9 +27,22 @@ const loginAdmin = async (loginAdmin: LoginAdmin) => {
 }
 
 const logout = () => {
+    // Xóa tất cả thông tin người dùng
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_token_expiry");
+    localStorage.removeItem("user_token");
+    localStorage.removeItem("user_info");
     delete axiosInstance.defaults.headers.common['Authorization'];
+
+    // Kích hoạt sự kiện storage để xóa danh sách bài hát đã like
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: 'user_info',
+        newValue: null,
+        oldValue: localStorage.getItem('user_info'),
+        storageArea: localStorage
+    }));
+
+    window.location.href = '/login-user';
 }
 
 export { loginAdmin, logout };

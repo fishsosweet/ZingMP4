@@ -25,7 +25,13 @@ class Baihat extends Model
         'created_at',
         'updated_at'
     ];
-public function casi()
+
+    public function favoredByUsers()
+    {
+        return $this->belongsToMany(User::class, 'favorite_songs', 'song_id', 'user_id')->withTimestamps();
+    }
+
+    public function casi()
 {
     return $this->belongsTo(CaSi::class, 'casi_id');
 }

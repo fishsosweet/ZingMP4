@@ -21,6 +21,7 @@ import UserLayout from "./pages/User/Layout.tsx";
 import HomeUser from "./pages/User/KhamPha/UserPage.tsx";
 import ZingChat from "./pages/User/ZingChat/ZingChat.tsx";
 import { MusicProvider } from './contexts/MusicContext';
+import { LikedSongsProvider } from './contexts/LikedSongsContext';
 import Playlist from "./pages/Admin/Playlist/Them.tsx";
 import ListPlaylist from "./pages/Admin/Playlist/List.tsx";
 import SuaPlaylist from "./pages/Admin/Playlist/Sua.tsx";
@@ -165,8 +166,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <MusicProvider>
-            <RouterProvider router={router} />
-        </MusicProvider>
+        <LikedSongsProvider>
+            <MusicProvider>
+                <RouterProvider router={router} />
+            </MusicProvider>
+        </LikedSongsProvider>
     </StrictMode>,
 )

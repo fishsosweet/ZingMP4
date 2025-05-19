@@ -49,6 +49,12 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
 
+    public function favoriteSongs()
+    {
+        return $this->belongsToMany( Baihat::class, 'favorite_songs', 'user_id', 'song_id')->withTimestamps();
+    }
+
+
     public function getJWTIdentifier()
     {
         return $this->getKey();

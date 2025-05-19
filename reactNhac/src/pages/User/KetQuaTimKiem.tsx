@@ -4,7 +4,8 @@ import axiosInstance from "../../../configs/axios.tsx";
 import { useMusic } from "../../contexts/MusicContext.tsx";
 import { FaHeart } from "react-icons/fa";
 import SongContextMenu from "../../components/User/SongContextMenu.tsx";
-import ToastNotification from "../../components/User/ToastNotification.tsx";
+import { useLikedSongs } from "../../contexts/LikedSongsContext";
+
 
 export default function TimKiem() {
     const [searchParams] = useSearchParams();
@@ -13,11 +14,11 @@ export default function TimKiem() {
     const [loading, setLoading] = useState(false);
     const [currentPlaying, setCurrentPlaying] = useState<number | null>(null);
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
+    const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedSong, setSelectedSong] = useState<any>(null);
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [showToast, setShowToast] = useState(false);
+
 
     useEffect(() => {
         if (query) {
@@ -51,10 +52,29 @@ export default function TimKiem() {
     const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
         event.preventDefault();
         event.stopPropagation();
-        setContextMenuPosition({
-            x: event.clientX + window.scrollX,
-            y: event.clientY + window.scrollY
-        });
+        const rect = event.currentTarget.getBoundingClientRect();
+        const menuWidth = 200;
+        const menuHeight = 150;
+
+        // Tính toán vị trí để menu xuất hiện gần nút trái tim (bên trái nút ba chấm)
+        // Căn cạnh phải của menu với cạnh trái của nút ba chấm, căn giữa theo chiều cao nút
+        let x = rect.left - menuWidth;
+        let y = rect.top + rect.height / 2 - menuHeight / 2;
+
+        // Điều chỉnh vị trí nếu menu bị tràn ra ngoài màn hình
+        if (x < 0) {
+            x = rect.right + 10; // Nếu tràn trái thì đặt bên phải nút ba chấm
+        }
+
+        if (y < 0) {
+            y = 10; // Nếu tràn trên thì đặt ở sát đỉnh màn hình
+        }
+
+        if (y + menuHeight > window.innerHeight) {
+            y = window.innerHeight - menuHeight - 10; // Nếu tràn dưới thì điều chỉnh lên trên
+        }
+
+        setContextMenuPosition({ x, y });
         setSelectedSong(song);
         setShowContextMenu(true);
     };
@@ -64,14 +84,14 @@ export default function TimKiem() {
         setSelectedSong(null);
     };
 
-    const showToastNotification = (message: string) => {
-        setToastMessage(message);
-        setShowToast(true);
-    };
-
-    const hideToastNotification = () => {
-        setToastMessage(null);
-        setShowToast(false);
+    const handleLikeClick = async (e: React.MouseEvent, song: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await toggleLike(song.id);
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
     };
 
     if (loading) {
@@ -112,7 +132,11 @@ export default function TimKiem() {
                                     />
                                     <div
                                         className="absolute  right-12  flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <button className="text-white hover:text-pink-500 cursor-pointer">
+                                        <button
+                                            onClick={(e) => handleLikeClick(e, baihat)}
+                                            disabled={isLikedLoading}
+                                            className={`cursor-pointer ${isLikedLoading ? 'text-gray-500' : isLiked(baihat.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
+                                        >
                                             <FaHeart />
                                         </button>
                                         <button
@@ -146,15 +170,11 @@ export default function TimKiem() {
                     song={selectedSong}
                     position={contextMenuPosition}
                     onClose={handleCloseContextMenu}
-                    showToast={showToastNotification}
+
                 />
             )}
 
-            <ToastNotification
-                message={toastMessage}
-                isVisible={showToast}
-                onClose={hideToastNotification}
-            />
+
 
         </div>
     );

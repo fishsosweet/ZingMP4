@@ -3,6 +3,7 @@ import { getThongTinBaiHat, getRelatedSongs } from "../../services/User/TrangChu
 import { useEffect, useState } from "react";
 import { FaHeart, FaPlay } from "react-icons/fa";
 import { useMusic } from "../../contexts/MusicContext.tsx";
+import { useLikedSongs } from "../../contexts/LikedSongsContext";
 
 interface Song {
     id: number;
@@ -30,6 +31,7 @@ export default function ThongTinBaiHat() {
     const [baiHat, setBaiHat] = useState<Song>();
     const [relatedSongs, setRelatedSongs] = useState<Song[]>([]);
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
+    const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
 
     const thongTinBaiHat = async () => {
         try {
@@ -54,6 +56,17 @@ export default function ThongTinBaiHat() {
         setIsPlaying(true);
     };
 
+    const handleLikeClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!baiHat) return;
+        try {
+            await toggleLike(baiHat.id);
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
+    };
+
     if (!baiHat) return <div className="text-white text-center mt-10">Đang tải...</div>;
 
     return (
@@ -70,7 +83,7 @@ export default function ThongTinBaiHat() {
                         <span
                             className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{baiHat.casi?.ten_casi}</span>
                     </Link>
-                    <p className="text-sm text-gray-400">{baiHat.luotthich} lượt thích</p>
+                    <p className="text-sm text-gray-400">Trạng thái thích: {isLiked(baiHat.id) ? 'Đã thích' : 'Chưa thích'}</p>
                 </div>
 
                 <div className="flex-1">
@@ -92,7 +105,11 @@ export default function ThongTinBaiHat() {
                                 </span>
                             </Link>
                         </div>
-                        <button className="text-white hover:text-pink-500 cursor-pointer">
+                        <button
+                            onClick={handleLikeClick}
+                            disabled={isLikedLoading}
+                            className={`cursor-pointer text-xl transition-colors duration-200 ${isLikedLoading ? 'text-gray-500' : isLiked(baiHat.id) ? 'text-red-500' : 'text-white hover:text-red-500'}`}
+                        >
                             <FaHeart />
                         </button>
                         <button
@@ -146,8 +163,8 @@ export default function ThongTinBaiHat() {
                                     </button>
                                 </div>
                                 <Link to={`/zingmp4/thong-tin/${song.id}`}>
-                                    <span  className="font-semibold hover:text-[#9b4de0] text-[18px] truncate block max-w-[190px] whitespace-nowrap overflow-hidden"
-                                           title={song.title}>
+                                    <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate block max-w-[190px] whitespace-nowrap overflow-hidden"
+                                        title={song.title}>
                                         {song.title}
                                     </span>
                                 </Link>

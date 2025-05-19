@@ -16,12 +16,13 @@ import dayjs from 'dayjs';
 import { XAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { useMusic } from "../../../contexts/MusicContext";
 import SongContextMenu from "../../../components/User/SongContextMenu.tsx";
-import ToastNotification from "../../../components/User/ToastNotification.tsx";
+import { useLikedSongs } from "../../../contexts/LikedSongsContext";
 
 const colors = ['#f87171', '#60a5fa', '#34d399'];
 
 export default function HomeUser() {
     const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
+    const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
     const [baiHatRandom, setBaiHatRandom] = useState<any[]>([]);
     const [playlist, setLocalPlaylist] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -31,8 +32,6 @@ export default function HomeUser() {
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedSong, setSelectedSong] = useState<any>(null);
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         const fetchTopSongs = async () => {
@@ -135,9 +134,10 @@ export default function HomeUser() {
     const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
         event.preventDefault();
         event.stopPropagation();
+        const rect = event.currentTarget.getBoundingClientRect();
         setContextMenuPosition({
-            x: event.clientX + window.scrollX,
-            y: event.clientY + window.scrollY
+            x: rect.right,
+            y: rect.top
         });
         setSelectedSong(song);
         setShowContextMenu(true);
@@ -148,36 +148,19 @@ export default function HomeUser() {
         setSelectedSong(null);
     };
 
-    const showToastNotification = (message: string) => {
-        setToastMessage(message);
-        setShowToast(true);
-    };
-
-    const hideToastNotification = () => {
-        setToastMessage(null);
-        setShowToast(false);
+    const handleLikeClick = async (e: React.MouseEvent, song: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await toggleLike(song.id);
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
     };
 
     return (
-        <div className="p-15 bg-[#170f23] text-white">
-            {/*<section className="mb-10">*/}
-            {/*    <div className="flex justify-between items-center mb-4">*/}
-            {/*        <h2 className="text-2xl font-bold">Nghe Gần Đây</h2>*/}
-            {/*        <button className="text-sm text-purple-400 hover:underline">Tất Cả {'>'}</button>*/}
-            {/*    </div>*/}
-            {/*    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">*/}
-            {/*        {recentlyPlayed.map((item, index) => (*/}
-            {/*            <div key={index} className="flex flex-col items-center">*/}
-            {/*                <img*/}
-            {/*                    src={item.img}*/}
-            {/*                    alt={item.title}*/}
-            {/*                    className="rounded-lg w-full h-28 object-cover mb-2"*/}
-            {/*                />*/}
-            {/*                <span className="text-sm text-center">{item.title}</span>*/}
-            {/*            </div>*/}
-            {/*        ))}*/}
-            {/*    </div>*/}
-            {/*</section>*/}
+        <div className="p-15 bg-[#170f23] text-white relative">
+
 
             <section>
                 <div className="flex justify-between items-center mb-4">
@@ -246,7 +229,11 @@ export default function HomeUser() {
 
                                 <div
                                     className="absolute top-1/2 right-4 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <button className="text-white hover:text-pink-500 cursor-pointer">
+                                    <button
+                                        onClick={(e) => handleLikeClick(e, item)}
+                                        disabled={isLikedLoading}
+                                        className={`cursor-pointer ${isLikedLoading ? 'text-gray-500' : isLiked(item.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
+                                    >
                                         <FaHeart />
                                     </button>
                                     <button
@@ -372,11 +359,19 @@ export default function HomeUser() {
                             </div>
                             <div
                                 className="absolute top-1/2 right-4 -translate-y-1/2 flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <button className="text-white hover:text-pink-500 cursor-pointer">
+                                <button
+                                    onClick={(e) => handleLikeClick(e, item)}
+                                    disabled={isLikedLoading}
+                                    className={`cursor-pointer ${isLikedLoading ? 'text-gray-500' : isLiked(item.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
+                                >
                                     <FaHeart />
                                 </button>
                                 <button
-                                    onClick={(e) => handleShowContextMenu(e, item)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleShowContextMenu(e, item);
+                                    }}
                                     className="text-white hover:text-gray-400 cursor-pointer">
                                     ⋮
                                 </button>
@@ -481,20 +476,14 @@ export default function HomeUser() {
                 </div>
             </section>
 
-            {showContextMenu && (
+            {showContextMenu && selectedSong && (
                 <SongContextMenu
                     song={selectedSong}
                     position={contextMenuPosition}
                     onClose={handleCloseContextMenu}
-                    showToast={showToastNotification}
                 />
             )}
 
-            <ToastNotification
-                message={toastMessage}
-                isVisible={showToast}
-                onClose={hideToastNotification}
-            />
 
         </div>
     );

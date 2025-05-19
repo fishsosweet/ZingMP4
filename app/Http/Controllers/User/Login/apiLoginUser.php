@@ -58,6 +58,7 @@ class apiLoginUser extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'level' => $user->level,
+                'phone' => $user->phone,
                 'image' => $user->image ?? null
             ]);
         } catch (\Exception $e) {

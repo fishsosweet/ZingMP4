@@ -102,6 +102,7 @@ export default function HeaderUser() {
         setDangNhap(false);
         setUser(null);
         navigate('/zingmp4');
+        window.location.reload();
     };
 
     return (

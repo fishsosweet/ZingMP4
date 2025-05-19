@@ -4,7 +4,8 @@ import { useMusic } from "../../../contexts/MusicContext";
 import { getTop10Songs } from "../../../services/User/Zingchart";
 import { Link } from "react-router-dom";
 import SongContextMenu from "../../../components/User/SongContextMenu.tsx";
-import ToastNotification from "../../../components/User/ToastNotification.tsx";
+import { useLikedSongs } from "../../../contexts/LikedSongsContext";
+
 
 interface Song {
     id: number;
@@ -24,12 +25,12 @@ interface Song {
 
 export default function ZingChart() {
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
+    const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
     const [songs, setSongs] = useState<Song[]>([]);
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedSong, setSelectedSong] = useState<any>(null);
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [showToast, setShowToast] = useState(false);
+
 
     useEffect(() => {
         const fetchTopSongs = async () => {
@@ -53,10 +54,29 @@ export default function ZingChart() {
     const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
         event.preventDefault();
         event.stopPropagation();
-        setContextMenuPosition({
-            x: event.clientX + window.scrollX,
-            y: event.clientY + window.scrollY
-        });
+        const rect = event.currentTarget.getBoundingClientRect();
+        const menuWidth = 200;
+        const menuHeight = 150;
+
+        // Tính toán vị trí để menu xuất hiện gần nút trái tim (bên trái nút ba chấm)
+        // Căn cạnh phải của menu với cạnh trái của nút ba chấm, căn giữa theo chiều cao nút
+        let x = rect.left - menuWidth;
+        let y = rect.top + rect.height / 2 - menuHeight / 2;
+
+        // Điều chỉnh vị trí nếu menu bị tràn ra ngoài màn hình
+        if (x < 0) {
+            x = rect.right + 10; // Nếu tràn trái thì đặt bên phải nút ba chấm
+        }
+
+        if (y < 0) {
+            y = 10; // Nếu tràn trên thì đặt ở sát đỉnh màn hình
+        }
+
+        if (y + menuHeight > window.innerHeight) {
+            y = window.innerHeight - menuHeight - 10; // Nếu tràn dưới thì điều chỉnh lên trên
+        }
+
+        setContextMenuPosition({ x, y });
         setSelectedSong(song);
         setShowContextMenu(true);
     };
@@ -66,14 +86,14 @@ export default function ZingChart() {
         setSelectedSong(null);
     };
 
-    const showToastNotification = (message: string) => {
-        setToastMessage(message);
-        setShowToast(true);
-    };
-
-    const hideToastNotification = () => {
-        setToastMessage(null);
-        setShowToast(false);
+    const handleLikeClick = async (e: React.MouseEvent, song: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await toggleLike(song.id);
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
     };
 
     return (
@@ -115,7 +135,11 @@ export default function ZingChart() {
                                         className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{song.casi.ten_casi}</span>
                                 </Link>
                             </div>
-                            <button className="text-white hover:text-pink-500 cursor-pointer mr-2">
+                            <button
+                                onClick={(e) => handleLikeClick(e, song)}
+                                disabled={isLikedLoading}
+                                className={`cursor-pointer mr-2 ${isLikedLoading ? 'text-gray-500' : isLiked(song.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
+                            >
                                 <FaHeart />
                             </button>
                             <button
@@ -162,15 +186,10 @@ export default function ZingChart() {
                     song={selectedSong}
                     position={contextMenuPosition}
                     onClose={handleCloseContextMenu}
-                    showToast={showToastNotification}
                 />
             )}
 
-            <ToastNotification
-                message={toastMessage}
-                isVisible={showToast}
-                onClose={hideToastNotification}
-            />
+
 
         </div>
     );

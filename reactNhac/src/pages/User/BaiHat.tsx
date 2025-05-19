@@ -10,6 +10,8 @@ import { loadYouTubeAPI } from "../../services/Admin/APIAudioSong.tsx";
 import { getDSPhat, tangLuotXem } from "../../services/User/TrangChuService.tsx";
 import { useMusic } from "../../contexts/MusicContext";
 import { Link } from "react-router-dom";
+import { useLikedSongs } from "../../contexts/LikedSongsContext";
+import SongContextMenu from "../../components/User/SongContextMenu.tsx";
 
 interface Song {
     id: number;
@@ -45,8 +47,11 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
     const [duration, setDuration] = useState(0);
     const [showVolume, setShowVolume] = useState(false);
     const [showPlaylist, setShowPlaylist] = useState(false);
+    const [showContextMenu, setShowContextMenu] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
     const { isPlaying, setIsPlaying, currentTime, setCurrentTime } = useMusic();
+    const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
 
     const playerRef = useRef<YT.Player | null>(null);
     const playerContainerRef = useRef<HTMLDivElement | null>(null);
@@ -299,6 +304,49 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
 
     const showLyrics = () => setLyrics(true);
 
+    const handleLikeClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentSong) return;
+        try {
+            await toggleLike(currentSong.id);
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
+    };
+
+    const handleShowContextMenu = (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!currentSong) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        const menuWidth = 200;
+        const menuHeight = 150;
+
+        let x = rect.right + 10;
+        let y = rect.top + rect.height / 2 - menuHeight / 2;
+
+
+        if (x + menuWidth > window.innerWidth) {
+            x = rect.left - menuWidth - 10;
+        }
+
+        if (y < 0) {
+            y = 10;
+        }
+
+        if (y + menuHeight > window.innerHeight) {
+            y = window.innerHeight - menuHeight - 10;
+        }
+
+        setContextMenuPosition({ x, y });
+        setShowContextMenu(true);
+    };
+
+    const handleCloseContextMenu = () => {
+        setShowContextMenu(false);
+    };
+
     if (!currentSong) return null;
 
     return (
@@ -320,10 +368,17 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
                     </Link>
 
                 </div>
-                <button className="text-white text-xl ml-2 hover:text-pink-500 transition-colors cursor-pointer">
+                <button
+                    onClick={handleLikeClick}
+                    disabled={isLikedLoading}
+                    className={`text-xl ml-2 transition-colors cursor-pointer ${isLikedLoading ? 'text-gray-500' : isLiked(currentSong?.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
+                >
                     <FaHeart />
                 </button>
-                <button className="text-white text-xl hover:text-gray-400 transition-colors  cursor-pointer">
+                <button
+                    onClick={handleShowContextMenu}
+                    className="text-white text-xl hover:text-gray-400 transition-colors cursor-pointer w-8 h-8 flex items-center justify-center"
+                >
                     <FiMoreHorizontal />
                 </button>
             </div>
@@ -469,6 +524,14 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showContextMenu && currentSong && (
+                <SongContextMenu
+                    song={currentSong}
+                    position={contextMenuPosition}
+                    onClose={handleCloseContextMenu}
+                />
             )}
         </div>
     );

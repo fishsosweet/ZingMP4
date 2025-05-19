@@ -44,6 +44,7 @@ const Login = () => {
                 }
 
                 navigate('/zingmp4', { replace: true });
+                window.location.reload();
             }
         } catch (error: any) {
             console.error('Lỗi đăng nhập:', error);

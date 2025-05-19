@@ -70,6 +70,10 @@ Route::prefix('user')->group(function () {
         Route::post('/playlist/create', [ThongTinUser::class, 'postPlayList']);
         Route::get('/getplaylist/{user}', [ThongTinUser::class, 'getPlaylist']);
         Route::get('/playlist/{playlistId}/songs', [ThongTinUser::class, 'getSongsInPlaylist']);
+        Route::get('/check-like/{user}', [ThongTinUser::class, 'getLikedSongs']);
+        Route::delete('/remove-like/{user}/{song}', [ThongTinUser::class, 'deleteLike']);
+        Route::post('/add-like', [ThongTinUser::class, 'addLike']);
+        Route::post('/getLikeSongsofUser', [ThongTinUser::class, 'getLikedSongsofUser']);
     });
 
     Route::get('getRandomSongs', [TrangChuController::class, 'getRandomSongs']);
