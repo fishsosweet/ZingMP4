@@ -308,6 +308,15 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
         e.preventDefault();
         e.stopPropagation();
         if (!currentSong) return;
+
+        const userToken = localStorage.getItem('user_token');
+        const userInfo = localStorage.getItem('user_info');
+
+        if (!userToken || !userInfo) {
+            window.location.href = '/login-user';
+            return;
+        }
+
         try {
             await toggleLike(currentSong.id);
         } catch (error) {
@@ -358,29 +367,30 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
                     src={`http://127.0.0.1:8000/${currentSong.anh}`}
                     className="w-16 h-16 rounded-md object-cover"
                 />
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0 flex-1">
                     <Link to={`/zingmp4/thong-tin/${currentSong.id}`}>
-                        <h3 className="text-white font-semibold truncate max-w-[150px] hover:text-[#9b4de0]">{currentSong.title}</h3>
+                        <h3 className="text-white font-semibold truncate hover:text-[#9b4de0]">{currentSong.title}</h3>
                     </Link>
 
                     <Link to={`/zingmp4/thong-tin-ca-si/${currentSong.casi.id}`}>
-                        <p className="text-sm text-gray-400 truncate max-w-[150px] hover:text-[#9b4de0]">{currentSong.casi.ten_casi}</p>
+                        <p className="text-sm text-gray-400 truncate hover:text-[#9b4de0]">{currentSong.casi.ten_casi}</p>
                     </Link>
-
                 </div>
-                <button
-                    onClick={handleLikeClick}
-                    disabled={isLikedLoading}
-                    className={`text-xl ml-2 transition-colors cursor-pointer ${isLikedLoading ? 'text-gray-500' : isLiked(currentSong?.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
-                >
-                    <FaHeart />
-                </button>
-                <button
-                    onClick={handleShowContextMenu}
-                    className="text-white text-xl hover:text-gray-400 transition-colors cursor-pointer w-8 h-8 flex items-center justify-center"
-                >
-                    <FiMoreHorizontal />
-                </button>
+                <div className="flex items-center gap-2 ml-2">
+                    <button
+                        onClick={handleLikeClick}
+                        disabled={isLikedLoading}
+                        className={`text-xl transition-colors cursor-pointer ${isLikedLoading ? 'text-gray-500' : isLiked(currentSong?.id) ? 'text-pink-500' : 'text-white hover:text-pink-500'}`}
+                    >
+                        <FaHeart />
+                    </button>
+                    <button
+                        onClick={handleShowContextMenu}
+                        className="text-white text-xl hover:text-gray-400 transition-colors cursor-pointer w-8 h-8 flex items-center justify-center"
+                    >
+                        <FiMoreHorizontal />
+                    </button>
+                </div>
             </div>
 
             <div className="flex flex-col items-center flex-1 px-8 pr-20">

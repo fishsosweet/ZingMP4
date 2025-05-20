@@ -10,13 +10,13 @@ use App\Http\Controllers\User\ChuDe\ChuDeController;
 use App\Http\Controllers\User\Login\apiLoginUser;
 use App\Http\Controllers\User\TrangChu\TrangChuController;
 use App\Http\Controllers\User\ZingChart\ZingChartController;
+use App\Http\Controllers\User\Vip\VipController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\User\ThongTinUser\ThongTinUser;
 /*Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');*/
-
 
 Route::post('auth/login', [apiLoginAdmin::class, 'getapiLoginAdmin']);
 
@@ -64,6 +64,9 @@ Route::group([
 
 Route::prefix('user')->group(function () {
     Route::post('login', [apiLoginUser::class, 'getapiLoginUser']);
+    Route::post('registerUser', [ThongTinUser::class, 'register']);
+    Route::post('check-email', [ThongTinUser::class, 'checkEmail']);
+    Route::get('/vipprocess-get', [VipController::class, 'processVipPayment'])->name('vipprocess-get');
 
     Route::middleware(['jwt.auth'])->group(function () {
         Route::get('/getThongTinUser', [apiLoginUser::class, 'getUserProfile']);
@@ -74,6 +77,9 @@ Route::prefix('user')->group(function () {
         Route::delete('/remove-like/{user}/{song}', [ThongTinUser::class, 'deleteLike']);
         Route::post('/add-like', [ThongTinUser::class, 'addLike']);
         Route::post('/getLikeSongsofUser', [ThongTinUser::class, 'getLikedSongsofUser']);
+        Route::delete('/deletePlaylist/{idPlaylist}', [ThongTinUser::class, 'deletPlaylist']);
+        Route::get('/vip', [VipController::class, 'getGoiVip']);
+        Route::post('/postVipVNPay', [VipController::class, 'postVipVNPay']);
     });
 
     Route::get('getRandomSongs', [TrangChuController::class, 'getRandomSongs']);

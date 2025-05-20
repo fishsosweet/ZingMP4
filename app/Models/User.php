@@ -24,6 +24,8 @@ class User extends Authenticatable implements JWTSubject
         'phone',
         'image',
         'password',
+        'vip',
+        'exp_vip'
     ];
 
     /**
@@ -47,6 +49,11 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function goiVipDangKy()
+    {
+        return $this->hasMany(UserGoiVip::class);
     }
 
     public function favoriteSongs()

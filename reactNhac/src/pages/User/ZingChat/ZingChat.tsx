@@ -89,6 +89,13 @@ export default function ZingChart() {
     const handleLikeClick = async (e: React.MouseEvent, song: any) => {
         e.preventDefault();
         e.stopPropagation();
+
+        const userToken = localStorage.getItem('user_token');
+        if (!userToken) {
+            window.location.href = '/login-user';
+            return;
+        }
+
         try {
             await toggleLike(song.id);
         } catch (error) {

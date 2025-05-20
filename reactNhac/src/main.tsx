@@ -32,6 +32,9 @@ import ThongTinBaiHat from "./pages/User/ThongTinBaiHat.tsx";
 import ThongTinCaSi from "./pages/User/ThongTinCaSi.tsx";
 import DangNhap from "./pages/User/DangNhap/DangNhap.tsx";
 import ThuVien from "./pages/User/ThuVien/ThuVien.tsx";
+import DangKy from "./pages/User/DangKy/DangKy.tsx";
+import NangCap from "./pages/User/NangCap/NangCap.tsx";
+import GoiVip from "./pages/User/NangCap/GoiVIP.tsx";
 
 const router = createBrowserRouter([
     {
@@ -42,8 +45,23 @@ const router = createBrowserRouter([
         path: "/login-user",
         element: <DangNhap />,
     },
+    {
+        path: "/register-user",
+        element: <DangKy />,
+    },
+    {
+        path: "/zingmp4/nang-cap",
+        element: <PrivateRouteUser>
+            <NangCap />
+        </PrivateRouteUser>
 
-
+    },
+    {
+        path: "/zingmp4/nang-cap/goi-vip",
+        element: <PrivateRouteUser>
+            <GoiVip />
+        </PrivateRouteUser>
+    },
     {
         path: "/zingmp4",
         element: <UserLayout />,

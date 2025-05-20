@@ -136,9 +136,9 @@ const CaSi = () => {
                                     id="anh"
                                     name="anh"
                                     accept="image/*"
-                                    onChange={handleImageChange} // Xử lý ảnh preview
+                                    onChange={handleImageChange}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                    // Không dùng register ở đây
+
                                 />
                                 {previewImage && (
                                     <div id="image_show" className="mt-2">

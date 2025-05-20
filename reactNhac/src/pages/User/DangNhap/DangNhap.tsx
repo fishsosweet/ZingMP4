@@ -1,5 +1,5 @@
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from "../../../../configs/axios.tsx";
 import { useState } from "react";
 
@@ -113,6 +113,11 @@ const Login = () => {
                         >
                             Đăng nhập
                         </button>
+                    </div>
+                    <div className="text-center mt-4">
+                        <Link to="/register-user" className="text-sm text-purple-600 hover:text-purple-800">
+                            Chưa có tài khoản? Đăng ký ngay
+                        </Link>
                     </div>
                 </form>
             </div>

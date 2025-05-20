@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaSearch, FaDownload, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { FaSearch, FaSignOutAlt } from "react-icons/fa";
 import axiosInstance from "../../../configs/axios.tsx";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 
@@ -12,6 +12,7 @@ export default function HeaderUser() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [dangnhap, setDangNhap] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [isVip, setIsVip] = useState(false);
 
     const getUser = async () => {
         try {
@@ -28,6 +29,7 @@ export default function HeaderUser() {
                 setUser(res.data);
                 setDangNhap(true);
                 localStorage.setItem('user_info', JSON.stringify(res.data));
+                setIsVip(res.data.vip === 1);
             }
         } catch (error) {
             console.error('Lỗi khi lấy thông tin user:', error);
@@ -51,6 +53,7 @@ export default function HeaderUser() {
                     const parsedUser = JSON.parse(userInfo);
                     setUser(parsedUser);
                     setDangNhap(true);
+                    setIsVip(parsedUser.vip === 1);
                 } catch (error) {
                     console.error('Lỗi khi parse user info:', error);
                     getUser();
@@ -59,6 +62,7 @@ export default function HeaderUser() {
         } else {
             setDangNhap(false);
             setUser(null);
+            setIsVip(false);
         }
     }, []);
 
@@ -141,16 +145,19 @@ export default function HeaderUser() {
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
-                    Nâng cấp tài khoản
-                </button>
-                <button className="flex items-center bg-[#2f2739] hover:bg-[#3b2f4a] text-purple-400 text-sm font-semibold px-4 py-2 rounded-full">
-                    <FaDownload className="mr-2" />
-                    Tải bản Windows
-                </button>
-                <button className="bg-[#2f2739] p-2 rounded-full">
-                    <FaCog className="text-white" />
-                </button>
+                {!isVip && (
+                    <a
+                        href="/zingmp4/nang-cap"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <button
+                            className="bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-full cursor-pointer"
+                        >
+                            Nâng cấp tài khoản
+                        </button>
+                    </a>
+                )}
 
                 {dangnhap && user ? (
                     <div className="relative">
@@ -176,11 +183,6 @@ export default function HeaderUser() {
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="px-4 py-2">
-                                    <p className="text-gray-400 text-sm">Số điện thoại: {user.phone || 'Chưa cập nhật'}</p>
-                                </div>
-
                                 <div className="px-4 py-2 border-t border-gray-700">
                                     <button
                                         onClick={handleLogout}
@@ -194,13 +196,15 @@ export default function HeaderUser() {
                         )}
                     </div>
                 ) : (
-                    <Link to="/login-user">
-                        <img
-                            alt="avatar"
-                            className="w-8 h-8 rounded-full object-cover"
-                            src="http://127.0.0.1:8000/uploads/2025/05/18/avt.jpg"
-                        />
-                    </Link>
+                    <div>
+                        <Link to="/login-user">
+                            <img
+                                alt="avatar"
+                                className="w-8 h-8 rounded-full object-cover"
+                                src="http://127.0.0.1:8000/uploads/2025/05/18/avt.jpg"
+                            />
+                        </Link>
+                    </div>
                 )}
             </div>
         </div>

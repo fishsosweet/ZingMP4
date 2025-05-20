@@ -165,14 +165,14 @@ export default function UserLayout() {
                     {dangnhap ? (
                         <button
                             onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 text-sm px-3 py-2 hover:bg-[#2f2739] w-full rounded-lg">
+                            className="flex items-center gap-2 text-sm px-3 py-2 hover:bg-[#2f2739] w-full rounded-lg cursor-pointer">
                             <RiPlayListAddLine className="text-xl" />
                             Tạo playlist mới
                         </button>
                     ) : (
                         <Link to="/login-user">
                             <button
-                                className="flex items-center gap-2 text-sm px-3 py-2 hover:bg-[#2f2739] w-full rounded-lg">
+                                className="flex items-center gap-2 text-sm px-3 py-2 hover:bg-[#2f2739] w-full rounded-lg cursor-pointer">
                                 <RiPlayListAddLine className="text-xl" />
                                 Tạo playlist mới
                             </button>

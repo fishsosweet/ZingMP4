@@ -59,7 +59,8 @@ class apiLoginUser extends Controller
                 'email' => $user->email,
                 'level' => $user->level,
                 'phone' => $user->phone,
-                'image' => $user->image ?? null
+                'image' => $user->image ?? null,
+                'vip'=>$user->vip,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in getUserProfile: ' . $e->getMessage());

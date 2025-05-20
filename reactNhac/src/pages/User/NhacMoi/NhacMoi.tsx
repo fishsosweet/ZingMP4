@@ -58,23 +58,19 @@ export default function NhacMoi() {
         const rect = event.currentTarget.getBoundingClientRect();
         const menuWidth = 200;
         const menuHeight = 150;
-
-        // Tính toán vị trí để menu xuất hiện gần nút trái tim (bên trái nút ba chấm)
-        // Căn cạnh phải của menu với cạnh trái của nút ba chấm, căn giữa theo chiều cao nút
         let x = rect.left - menuWidth;
         let y = rect.top + rect.height / 2 - menuHeight / 2;
 
-        // Điều chỉnh vị trí nếu menu bị tràn ra ngoài màn hình
         if (x < 0) {
-            x = rect.right + 10; // Nếu tràn trái thì đặt bên phải nút ba chấm
+            x = rect.right + 10;
         }
 
         if (y < 0) {
-            y = 10; // Nếu tràn trên thì đặt ở sát đỉnh màn hình
+            y = 10;
         }
 
         if (y + menuHeight > window.innerHeight) {
-            y = window.innerHeight - menuHeight - 10; // Nếu tràn dưới thì điều chỉnh lên trên
+            y = window.innerHeight - menuHeight - 10;
         }
 
         setContextMenuPosition({ x, y });
@@ -90,6 +86,13 @@ export default function NhacMoi() {
     const handleLikeClick = async (e: React.MouseEvent, song: any) => {
         e.preventDefault();
         e.stopPropagation();
+
+        const userToken = localStorage.getItem('user_token');
+        if (!userToken) {
+            window.location.href = '/login-user';
+            return;
+        }
+
         try {
             await toggleLike(song.id);
         } catch (error) {

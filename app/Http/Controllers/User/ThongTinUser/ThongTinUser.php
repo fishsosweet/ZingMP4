@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User\ThongTinUser;
 
 use App\Http\Controllers\Controller;
 use App\Models\Baihat;
+use App\Models\Casi;
 use App\Models\Playlist;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -115,7 +116,59 @@ class ThongTinUser extends Controller
 
         return response()->json($songs);
     }
+    public function deletPlaylist($idPlaylist)
+    {
+        Playlist::destroy($idPlaylist);
+        return response()->json('Xóa playlist thành cong');
+    }
 
 
+    public function register(Request $request)
+    {
+        $request->validate([
+            'anh' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+        try {
+            $pathanh='';
+            if($request->hasFile('image') && $request->file('image')->isValid()){
+                $nameimage = $request->file('image')->getClientOriginalName();
+                $path = 'uploads/' . date("Y/m/d");
+                if (!file_exists(public_path($path))) {
+                    mkdir(public_path($path), 0777, true);
+                }
+                $request->file('image')->move(public_path($path), $nameimage);
+                $pathanh = $path . '/' . $nameimage;
+
+            }
+            User::create([
+                'name' => $request->name,
+                'email'=> $request->email,
+                'password' => bcrypt($request->password),
+                'image'=> $pathanh,
+                'phone'=>$request->phone
+            ]);
+            return response()->json([
+                'success' => 'Thêm tài khoản thành công'
+            ], 201);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'error' => 'Thêm tài khoản thất bại',
+                'message' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = $request->input('email');
+
+        $exists = User::where('email', $email)->exists();
+
+        return response()->json($exists);
+    }
 
 }
