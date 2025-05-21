@@ -8,19 +8,21 @@
 // ];
 import { getDSBaiRandom, getDSMoiPhatHanh, getDSPlaylist, getTopSongs, getSongsInPlaylist } from "../../../services/User/TrangChuService.tsx";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
-    FaHeart, FaPlay
+    FaHeart, FaPlay, FaCrown
 } from "react-icons/fa";
 import dayjs from 'dayjs';
 import { XAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { useMusic } from "../../../contexts/MusicContext";
 import SongContextMenu from "../../../components/User/SongContextMenu.tsx";
 import { useLikedSongs } from "../../../contexts/LikedSongsContext";
+import axiosInstance from "../../../../configs/axios.tsx";
 
 const colors = ['#f87171', '#60a5fa', '#34d399'];
 
 export default function HomeUser() {
+    const navigate = useNavigate();
     const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
     const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
     const [baiHatRandom, setBaiHatRandom] = useState<any[]>([]);
@@ -32,6 +34,32 @@ export default function HomeUser() {
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedSong, setSelectedSong] = useState<any>(null);
+    const [isUserVip, setIsUserVip] = useState(false);
+
+    const refreshUserData = async () => {
+        try {
+            const token = localStorage.getItem('user_token');
+            if (!token) {
+                setIsUserVip(false);
+                return;
+            }
+            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            const res = await axiosInstance.get('/user/getThongTinUser');
+            if (res.data) {
+                localStorage.setItem('user_info', JSON.stringify(res.data));
+                setIsUserVip(res.data.vip === 1);
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    };
+
+    useEffect(() => {
+        refreshUserData();
+        // Cập nhật thông tin mỗi 30 giây
+        const interval = setInterval(refreshUserData, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const fetchTopSongs = async () => {
@@ -112,7 +140,20 @@ export default function HomeUser() {
         }
     }, [baiHatRandom, playlist]);
 
-    const handlePlaySong = (song: any) => {
+    const handleVipRestriction = async (song: any) => {
+        if (song.vip === 1) {
+            await refreshUserData();
+            if (!isUserVip) {
+                navigate('/zingmp4/nang-cap');
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const handlePlaySong = async (song: any) => {
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
         setCurrentSong(song);
         setPlaylist([song]);
         setIsPlaying(true);
@@ -122,7 +163,10 @@ export default function HomeUser() {
         try {
             const response = await getSongsInPlaylist(playlistId);
             if (response && Array.isArray(response.data) && response.data.length > 0) {
-                setCurrentSong(response.data[0]);
+                const firstSong = response.data[0];
+                const isRestricted = await handleVipRestriction(firstSong);
+                if (isRestricted) return;
+                setCurrentSong(firstSong);
                 setPlaylist(response.data);
                 setIsPlaying(true);
             }
@@ -131,9 +175,11 @@ export default function HomeUser() {
         }
     };
 
-    const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
+    const handleShowContextMenu = async (event: React.MouseEvent, song: any) => {
         event.preventDefault();
         event.stopPropagation();
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
         const rect = event.currentTarget.getBoundingClientRect();
         setContextMenuPosition({
             x: rect.right,
@@ -151,6 +197,8 @@ export default function HomeUser() {
     const handleLikeClick = async (e: React.MouseEvent, song: any) => {
         e.preventDefault();
         e.stopPropagation();
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
 
         const userToken = localStorage.getItem('user_token');
         if (!userToken) {
@@ -210,20 +258,25 @@ export default function HomeUser() {
                                     <img
                                         src={`http://127.0.0.1:8000/${item.anh}`}
                                         alt={item.title}
-                                        className="w-full h-full object-cover rounded-md "
+                                        className={`w-full h-full object-cover rounded-md ${item.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
                                         onClick={() => handlePlaySong(item)}
                                     />
                                     <button
-                                        className="absolute inset-0 flex items-center justify-center  text-white bg-opacity-50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                                        className="absolute inset-0 flex items-center justify-center text-white bg-opacity-50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                                         onClick={() => handlePlaySong(item)}
                                     >
                                         <FaPlay />
                                     </button>
+                                    {item.vip === 1 && (
+                                        <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                            <FaCrown className="w-3 h-3" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col overflow-hidden">
                                     <Link to={`/zingmp4/thong-tin/${item.id}`}>
-                                        <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">
+                                        <span className={`font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px] ${item.vip === 1 ? 'text-yellow-400' : ''}`}>
                                             {item.title}
                                         </span>
                                     </Link>
@@ -336,21 +389,26 @@ export default function HomeUser() {
                                 <img
                                     src={`http://127.0.0.1:8000/${item.anh}`}
                                     alt={item.title}
-                                    className="w-full h-full object-cover rounded-md "
+                                    className={`w-full h-full object-cover rounded-md ${item.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
                                     onClick={() => handlePlaySong(item)}
                                 />
                                 <button
-                                    className="absolute inset-0 flex items-center justify-center  text-white bg-opacity-50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                                    className="absolute inset-0 flex items-center justify-center text-white bg-opacity-50 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                                     onClick={() => handlePlaySong(item)}
                                 >
                                     <FaPlay />
                                 </button>
+                                {item.vip === 1 && (
+                                    <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                        <FaCrown className="w-3 h-3" />
+                                    </div>
+                                )}
                             </div>
                             <div className="flex flex-col overflow-hidden">
                                 <div className="flex flex-col overflow-hidden">
                                     <Link to={`/zingmp4/thong-tin/${item.id}`} className="inline-block max-w-fit">
                                         <span
-                                            className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">{item.title}</span>
+                                            className={`font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px] ${item.vip === 1 ? 'text-yellow-400' : ''}`}>{item.title}</span>
                                     </Link>
                                     <Link to={`/zingmp4/thong-tin-ca-si/${item.casi.id}`} className="inline-block max-w-fit">
                                         <span
@@ -414,11 +472,18 @@ export default function HomeUser() {
                                 className="flex items-center bg-purple-800 p-3 rounded-lg space-x-3 w-[450px] hover:bg-purple-900 cursor-pointer"
                                 onClick={() => handlePlaySong(song)}>
                                 <div className="text-2xl font-bold text-white">{index + 1}</div>
-                                <img src={`http://127.0.0.1:8000/${song.anh}`} alt={song.title}
-                                    className="w-12 h-12 rounded-md object-cover" />
+                                <div className="relative">
+                                    <img src={`http://127.0.0.1:8000/${song.anh}`} alt={song.title}
+                                        className={`w-12 h-12 rounded-md object-cover ${song.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`} />
+                                    {song.vip === 1 && (
+                                        <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                            <FaCrown className="w-3 h-3" />
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex-1">
                                     <Link to={`/zingmp4/thong-tin/${song.id}`}>
-                                        <div className="font-semibold">{song.title}</div>
+                                        <div className={`font-semibold ${song.vip === 1 ? 'text-yellow-400' : ''}`}>{song.title}</div>
                                     </Link>
                                     <Link to={`/zingmp4/thong-tin-ca-si/${song.casi.id}`} className="inline-block max-w-fit">
                                         <div

@@ -20,29 +20,23 @@ class VipController extends Controller
 
     public function postVipVNPay(Request $request)
     {
-        // Lấy thông tin user
+
         $user = User::find($request->user_id);
 
-        // Kiểm tra nếu user tồn tại và đang có gói VIP còn hạn
         if ($user && $user->exp_vip && (new \DateTime($user->exp_vip)) > new \DateTime()) {
             return response()->json(['code' => '01', 'message' => 'Bạn đã có gói VIP đang hoạt động.'], 400);
         }
 
-        // Xóa các session cũ nếu có (không còn cần thiết nếu dùng DB transaction)
-        // session()->forget('user_id');
-        // session()->forget('vip_id');
 
         $data = $request->all();
-        $vnp_TxnRef = 'VIP_' . time() . '_' . $data['user_id']; // Tạo mã đơn hàng duy nhất
-
-        // Lưu thông tin giao dịch tạm thời vào database với trạng thái pending
+        $vnp_TxnRef = 'VIP_' . time() . '_' . $data['user_id'];
         DB::table('user_goi_vip')->insert([
             'user_id' => $data['user_id'],
             'goi_vip_id' => $data['package_id'],
-            'ngay_dang_ky' => null, // Chưa có ngày đăng ký chính thức
-            'ngay_het_han' => null, // Chưa có ngày hết hạn chính thức
-            'trangthai' => 'pending', // Trạng thái chờ thanh toán
-            'transaction_code' => $vnp_TxnRef, // Lưu mã giao dịch
+            'ngay_dang_ky' => null,
+            'ngay_het_han' => null,
+            'trangthai' => 'pending',
+            'transaction_code' => $vnp_TxnRef,
             'tien' => $data['amount'],
             'created_at' => now(),
             'updated_at' => now()
@@ -71,7 +65,7 @@ class VipController extends Controller
             "vnp_OrderInfo" => $vnp_OrderInfo,
             "vnp_OrderType" => $vnp_OrderType,
             "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => $vnp_TxnRef, // Sử dụng mã giao dịch đã lưu
+            "vnp_TxnRef" => $vnp_TxnRef,
         );
 
         if (isset($vnp_BankCode) && $vnp_BankCode != "") {
@@ -96,7 +90,6 @@ class VipController extends Controller
         $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret); //
         $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
 
-        // Trả về URL để frontend chuyển hướng
         return response()->json([
             'code' => '00',
             'message' => 'success',
@@ -112,7 +105,7 @@ class VipController extends Controller
         $vnp_SecureHash = $request->get('vnp_SecureHash');
 
         $inputData = array();
-        // $returnData = array(); // Không cần returnData ở đây
+
 
         $data = $request->all();
         foreach ($data as $key => $value) {
@@ -136,44 +129,32 @@ class VipController extends Controller
 
         $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-        // Lấy mã giao dịch từ callback
         $transactionCode = $request->get('vnp_TxnRef');
 
-        // Tìm bản ghi giao dịch trong DB
         $transaction = DB::table('user_goi_vip')
             ->where('transaction_code', $transactionCode)
             ->first();
 
-        // Kiểm tra chữ ký bảo mật và trạng thái thanh toán
         if ($secureHash == $vnp_SecureHash) {
             if ($vnp_ResponseCode == '00' && $vnp_TransactionStatus == '00') {
-                // Thanh toán thành công
-
-                // Kiểm tra xem giao dịch có tồn tại và chưa được xử lý không
                 if ($transaction && $transaction->trangthai === 'pending') {
                     $user_id = $transaction->user_id;
                     $goi_vip_id = $transaction->goi_vip_id;
-
-                    // Lấy thông tin gói VIP
                     $goiVip = GoiVip::find($goi_vip_id);
                     if (!$goiVip) {
-                        // Cập nhật trạng thái giao dịch là lỗi nếu không tìm thấy gói VIP
                         DB::table('user_goi_vip')
                             ->where('transaction_code', $transactionCode)
                             ->update(['trangthai' => 'error', 'updated_at' => now()]);
 
-                        return redirect('http://localhost:5173/zingmp4/nang-cap?status=error&message=Không tìm thấy gói VIP');
+                        return redirect('http://localhost:5173/zingmp4/payment-result?status=error&message=Không tìm thấy gói VIP');
                     }
-
-                    // Tính ngày hết hạn mới: cộng dồn vào ngày hết hạn hiện tại nếu có
                     $user = User::find($user_id);
                     $ngayDangKy = now();
                     $ngayHetHan = $user && $user->exp_vip ?
                         (new \DateTime($user->exp_vip))->modify('+' . $goiVip->thoi_han . ' months') :
                         now()->addMonths($goiVip->thoi_han);
-                    $ngayHetHan = $ngayHetHan->format('Y-m-d H:i:s'); // Format lại cho phù hợp với DB
+                    $ngayHetHan = $ngayHetHan->format('Y-m-d H:i:s');
 
-                    // Cập nhật bản ghi giao dịch sang trạng thái completed và thêm ngày tháng
                     DB::table('user_goi_vip')
                         ->where('transaction_code', $transactionCode)
                         ->update([
@@ -183,42 +164,39 @@ class VipController extends Controller
                             'updated_at' => now()
                         ]);
 
-                    // Cập nhật trạng thái VIP và ngày hết hạn cho user trong bảng users
                     if ($user) {
                         $user->vip = true;
                         $user->exp_vip = $ngayHetHan;
                         $user->save();
                     }
 
-                    return redirect('http://localhost:5173/zingmp4/nang-cap?status=success&message=Thanh toán gói VIP thành công');
+                    return redirect('http://localhost:5173/zingmp4/payment-result?status=success&message=Thanh toán gói VIP thành công');
                 } else if ($transaction && $transaction->trangthai !== 'pending') {
-                    // Giao dịch đã được xử lý trước đó
-                    return redirect('http://localhost:5173/zingmp4/nang-cap?status=info&message=Giao dịch đã được xử lý');
+
+                    return redirect('http://localhost:5173/zingmp4/payment-result?status=info&message=Giao dịch đã được xử lý');
                 } else {
-                    // Không tìm thấy giao dịch
-                    return redirect('http://localhost:5173/zingmp4/nang-cap?status=error&message=Không tìm thấy giao dịch');
+
+                    return redirect('http://localhost:5173/zingmp4/payment-result?status=error&message=Không tìm thấy giao dịch');
                 }
             } else {
-                // Thanh toán không thành công
-                // Cập nhật trạng thái giao dịch sang failed nếu tìm thấy bản ghi pending
+
                 if ($transaction && $transaction->trangthai === 'pending') {
                     DB::table('user_goi_vip')
                         ->where('transaction_code', $transactionCode)
                         ->update(['trangthai' => 'failed', 'updated_at' => now()]);
                 }
 
-                return redirect('http://localhost:5173/zingmp4/nang-cap?status=error&message=Thanh toán không thành công. Mã lỗi VNPay: ' . $vnp_ResponseCode);
+                return redirect('http://localhost:5173/zingmp4/payment-result?status=error&message=Thanh toán không thành công. Mã lỗi VNPay: ' . $vnp_ResponseCode);
             }
         } else {
-            // Chữ ký không hợp lệ
-            // Cập nhật trạng thái giao dịch sang error nếu tìm thấy bản ghi pending
+
             if ($transaction && $transaction->trangthai === 'pending') {
                 DB::table('user_goi_vip')
                     ->where('transaction_code', $transactionCode)
                     ->update(['trangthai' => 'error', 'updated_at' => now()]);
             }
 
-            return redirect('http://localhost:5173/zingmp4/nang-cap?status=error&message=Chữ ký VNPay không hợp lệ');
+            return redirect('http://localhost:5173/zingmp4/payment-result?status=error&message=Chữ ký VNPay không hợp lệ');
         }
     }
 }

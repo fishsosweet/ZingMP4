@@ -1,16 +1,33 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../configs/axios.tsx";
 import { useMusic } from "../../contexts/MusicContext.tsx";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaPlay, FaCrown } from "react-icons/fa";
 import SongContextMenu from "../../components/User/SongContextMenu.tsx";
 import { useLikedSongs } from "../../contexts/LikedSongsContext";
 
+interface Song {
+    id: number;
+    title: string;
+    artist: string;
+    img: string;
+    duration: string;
+    views: number;
+    anh: string;
+    casi: {
+        id: number;
+        ten_casi: string;
+    };
+    audio_url: string;
+    lyrics: string;
+    vip: boolean;
+}
 
 export default function TimKiem() {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const query = searchParams.get("query");
-    const [songs, setSongs] = useState<any[]>([]);
+    const [songs, setSongs] = useState<Song[]>([]);
     const [loading, setLoading] = useState(false);
     const [currentPlaying, setCurrentPlaying] = useState<number | null>(null);
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
@@ -18,7 +35,31 @@ export default function TimKiem() {
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedSong, setSelectedSong] = useState<any>(null);
+    const [isUserVip, setIsUserVip] = useState(false);
 
+    const refreshUserData = async () => {
+        try {
+            const token = localStorage.getItem('user_token');
+            if (!token) {
+                setIsUserVip(false);
+                return;
+            }
+            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            const res = await axiosInstance.get('/user/getThongTinUser');
+            if (res.data) {
+                localStorage.setItem('user_info', JSON.stringify(res.data));
+                setIsUserVip(Boolean(res.data.vip));
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    };
+
+    useEffect(() => {
+        refreshUserData();
+        const interval = setInterval(refreshUserData, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         if (query) {
@@ -42,36 +83,47 @@ export default function TimKiem() {
         }
     }, [query]);
 
-    const handlePlay = (song: any) => {
+    const handleVipRestriction = async (song: any) => {
+        if (song.vip === 1) {
+            await refreshUserData();
+            if (!isUserVip) {
+                navigate('/zingmp4/nang-cap');
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const handlePlay = async (song: any) => {
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
         setCurrentPlaying(currentPlaying === song.id ? null : song.id);
         setCurrentSong(song);
         setPlaylist(songs);
         setIsPlaying(true);
     };
 
-    const handleShowContextMenu = (event: React.MouseEvent, song: any) => {
+    const handleShowContextMenu = async (event: React.MouseEvent, song: any) => {
         event.preventDefault();
         event.stopPropagation();
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
         const rect = event.currentTarget.getBoundingClientRect();
         const menuWidth = 200;
         const menuHeight = 150;
-
-        // Tính toán vị trí để menu xuất hiện gần nút trái tim (bên trái nút ba chấm)
-        // Căn cạnh phải của menu với cạnh trái của nút ba chấm, căn giữa theo chiều cao nút
         let x = rect.left - menuWidth;
         let y = rect.top + rect.height / 2 - menuHeight / 2;
 
-        // Điều chỉnh vị trí nếu menu bị tràn ra ngoài màn hình
         if (x < 0) {
-            x = rect.right + 10; // Nếu tràn trái thì đặt bên phải nút ba chấm
+            x = rect.right + 10;
         }
 
         if (y < 0) {
-            y = 10; // Nếu tràn trên thì đặt ở sát đỉnh màn hình
+            y = 10;
         }
 
         if (y + menuHeight > window.innerHeight) {
-            y = window.innerHeight - menuHeight - 10; // Nếu tràn dưới thì điều chỉnh lên trên
+            y = window.innerHeight - menuHeight - 10;
         }
 
         setContextMenuPosition({ x, y });
@@ -87,6 +139,15 @@ export default function TimKiem() {
     const handleLikeClick = async (e: React.MouseEvent, song: any) => {
         e.preventDefault();
         e.stopPropagation();
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
+
+        const userToken = localStorage.getItem('user_token');
+        if (!userToken) {
+            window.location.href = '/login-user';
+            return;
+        }
+
         try {
             await toggleLike(song.id);
         } catch (error) {
@@ -125,13 +186,29 @@ export default function TimKiem() {
                                     className="flex items-center gap-4 flex-1 cursor-pointer"
                                     onClick={() => handlePlay(baihat)}
                                 >
-                                    <img
-                                        src={`http://127.0.0.1:8000/${baihat.anh}`}
-                                        className="w-14 h-14 rounded-lg object-cover"
-                                        alt={baihat.title}
-                                    />
+                                    <div className="relative group cursor-pointer">
+                                        <img
+                                            src={`http://127.0.0.1:8000/${baihat.anh}`}
+                                            className={`w-14 h-14 rounded-lg object-cover ${baihat.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
+                                            alt={baihat.title}
+                                        />
+                                        <button
+                                            className="absolute inset-0 flex items-center justify-center text-white bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePlay(baihat);
+                                            }}
+                                        >
+                                            <FaPlay />
+                                        </button>
+                                        {baihat.vip === 1 && (
+                                            <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                                <FaCrown className="w-3 h-3" />
+                                            </div>
+                                        )}
+                                    </div>
                                     <div
-                                        className="absolute  right-12  flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        className="absolute right-12 flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                         <button
                                             onClick={(e) => handleLikeClick(e, baihat)}
                                             disabled={isLikedLoading}
@@ -147,18 +224,13 @@ export default function TimKiem() {
                                     </div>
                                     <div>
                                         <Link to={`/zingmp4/thong-tin/${baihat.id}`}>
-                                            <div
-                                                className="font-semibold text-lg hover:text-[#9b4de0]">{baihat.title}</div>
+                                            <div className={`font-semibold text-lg hover:text-[#9b4de0] ${baihat.vip === 1 ? 'text-yellow-400' : ''}`}>{baihat.title}</div>
                                         </Link>
                                         <Link to={`/zingmp4/thong-tin-ca-si/${baihat.casi.id}`}>
-                                            <div
-                                                className="text-sm text-gray-400 hover:text-[#9b4de0]">{baihat.casi?.ten_casi || "Hông rõ ca sĩ"}</div>
+                                            <div className="text-sm text-gray-400 hover:text-[#9b4de0]">{baihat.casi?.ten_casi || "Hông rõ ca sĩ"}</div>
                                         </Link>
-
                                     </div>
-
                                 </div>
-
                             </div>
                         ))}
                     </div>
@@ -170,12 +242,8 @@ export default function TimKiem() {
                     song={selectedSong}
                     position={contextMenuPosition}
                     onClose={handleCloseContextMenu}
-
                 />
             )}
-
-
-
         </div>
     );
 }

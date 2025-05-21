@@ -6,7 +6,6 @@ import MusicPlayer from "./BaiHat.tsx";
 import { useMusic } from "../../contexts/MusicContext";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../configs/axios.tsx";
-
 export default function UserLayout() {
     const [dangnhap, setDangNhap] = useState(false);
     const [showModal, setShowModal] = useState(false);
@@ -154,7 +153,7 @@ export default function UserLayout() {
                     <div className="mt-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-4 text-center">
                         <p className="text-xs mb-2">Đăng nhập để khám phá playlist dành riêng cho bạn</p>
                         <Link to="/login-user">
-                            <button className="bg-white text-purple-600 font-semibold text-sm px-4 py-1 rounded-full">
+                            <button className="bg-white text-purple-600 font-semibold text-sm px-4 py-1 rounded-full cursor-pointer">
                                 ĐĂNG NHẬP
                             </button>
                         </Link>

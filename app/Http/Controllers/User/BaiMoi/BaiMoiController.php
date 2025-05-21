@@ -11,7 +11,6 @@ class BaiMoiController extends Controller
     public function baiMoi() {
         try {
             $top10 = BaiHat::with('casi')->orderBy('created_at', 'desc')->orderBy('luotxem', 'desc')
-                ->limit(10)
                 ->get();
             return response()->json($top10,200);
         } catch (\Exception $exception) {

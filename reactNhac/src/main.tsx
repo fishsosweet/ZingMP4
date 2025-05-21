@@ -35,6 +35,7 @@ import ThuVien from "./pages/User/ThuVien/ThuVien.tsx";
 import DangKy from "./pages/User/DangKy/DangKy.tsx";
 import NangCap from "./pages/User/NangCap/NangCap.tsx";
 import GoiVip from "./pages/User/NangCap/GoiVIP.tsx";
+import PaymentResult from './pages/User/NangCap/KetQuaNangCap.tsx';
 
 const router = createBrowserRouter([
     {
@@ -54,13 +55,16 @@ const router = createBrowserRouter([
         element: <PrivateRouteUser>
             <NangCap />
         </PrivateRouteUser>
-
     },
     {
         path: "/zingmp4/nang-cap/goi-vip",
         element: <PrivateRouteUser>
             <GoiVip />
         </PrivateRouteUser>
+    },
+    {
+        path: "/zingmp4/payment-result",
+        element: <PaymentResult />
     },
     {
         path: "/zingmp4",

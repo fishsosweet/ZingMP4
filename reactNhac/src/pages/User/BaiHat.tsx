@@ -23,6 +23,8 @@ interface Song {
     };
     audio_url: string;
     lyrics: string;
+    vip: boolean;
+
 }
 
 interface MusicPlayerProps {
@@ -211,20 +213,68 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
     }, [volume]);
 
     const handleSongEnd = async () => {
-        if (currentIndex < queue.length - 1) {
-            setCurrentIndex(prev => prev + 1);
-        } else {
+        const userInfo = localStorage.getItem('user_info');
+        const isUserVip = userInfo ? Boolean(JSON.parse(userInfo).vip) : false;
+
+        // Tìm bài hát không VIP tiếp theo trong queue
+        const findNextNonVipSong = (startIndex: number) => {
+            return queue.findIndex((song, index) => index > startIndex && (!song.vip || isUserVip));
+        };
+
+        // Tìm bài hát không VIP trong danh sách mới
+        const findNonVipSong = (songs: any[]) => {
+            return songs.find(song => !song.vip || isUserVip);
+        };
+
+        // Tải và thêm bài hát mới vào queue
+        const loadAndAddNewSong = async () => {
             try {
                 const excludeIds = queue.map(s => s.id);
                 const res = await getDSPhat(excludeIds);
                 if (Array.isArray(res.data) && res.data.length > 0) {
-                    const nextSong = res.data[0];
-                    setQueue(prev => [...prev, nextSong].slice(-MAX_HISTORY));
-                    setCurrentIndex(prev => prev + 1);
+                    const nonVipSong = findNonVipSong(res.data);
+                    if (nonVipSong) {
+                        setQueue(prev => [...prev, nonVipSong].slice(-MAX_HISTORY));
+                        setCurrentIndex(prev => prev + 1);
+                        return true;
+                    }
+                }
+                return false;
+            } catch (err) {
+                console.error("Lỗi tải bài mới:", err);
+                return false;
+            }
+        };
+
+        // Tìm và phát bài hát tiếp theo
+        const findAndPlayNextSong = async () => {
+            if (currentIndex < queue.length - 1) {
+                const nextIndex = findNextNonVipSong(currentIndex);
+                if (nextIndex !== -1) {
+                    setCurrentIndex(nextIndex);
+                    return true;
+                }
+            }
+            return await loadAndAddNewSong();
+        };
+
+        const success = await findAndPlayNextSong();
+        if (!success) {
+            // Nếu không tìm thấy bài hát, thử tải lại từ đầu
+            try {
+                const res = await getDSPhat([]);
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    const nonVipSong = findNonVipSong(res.data);
+                    if (nonVipSong) {
+                        setQueue([nonVipSong]);
+                        setCurrentIndex(0);
+                        return;
+                    }
                 }
             } catch (err) {
                 console.error("Lỗi tải bài mới:", err);
             }
+            setIsPlaying(false);
         }
     };
 
@@ -258,7 +308,7 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
                     }
                 });
             } catch (error) {
-                console.error('Error initializing player:', error);
+                console.error('Loi:', error);
             }
             return;
         }
@@ -276,17 +326,98 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
         }
     };
 
-    const handleNext = () => {
-        if (currentIndex < queue.length - 1) {
-            setCurrentIndex(prev => prev + 1);
-        } else {
-            handleSongEnd();
+    const handleNext = async () => {
+        const userInfo = localStorage.getItem('user_info');
+        const isUserVip = userInfo ? Boolean(JSON.parse(userInfo).vip) : false;
+
+        // Tìm bài hát không VIP tiếp theo trong queue
+        const findNextNonVipSong = (startIndex: number) => {
+            return queue.findIndex((song, index) => index > startIndex && (!song.vip || isUserVip));
+        };
+
+        // Tìm bài hát không VIP trong danh sách mới
+        const findNonVipSong = (songs: any[]) => {
+            return songs.find(song => !song.vip || isUserVip);
+        };
+
+        // Tải và thêm bài hát mới vào queue
+        const loadAndAddNewSong = async () => {
+            try {
+                const excludeIds = queue.map(s => s.id);
+                const res = await getDSPhat(excludeIds);
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    const nonVipSong = findNonVipSong(res.data);
+                    if (nonVipSong) {
+                        setQueue(prev => [...prev, nonVipSong].slice(-MAX_HISTORY));
+                        setCurrentIndex(prev => prev + 1);
+                        return true;
+                    }
+                }
+                return false;
+            } catch (err) {
+                console.error("Lỗi tải bài mới:", err);
+                return false;
+            }
+        };
+
+        // Tìm và phát bài hát tiếp theo
+        const findAndPlayNextSong = async () => {
+            if (currentIndex < queue.length - 1) {
+                const nextIndex = findNextNonVipSong(currentIndex);
+                if (nextIndex !== -1) {
+                    setCurrentIndex(nextIndex);
+                    return true;
+                }
+            }
+            return await loadAndAddNewSong();
+        };
+
+        const success = await findAndPlayNextSong();
+        if (!success) {
+            // Nếu không tìm thấy bài hát, thử tải lại từ đầu
+            try {
+                const res = await getDSPhat([]);
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    const nonVipSong = findNonVipSong(res.data);
+                    if (nonVipSong) {
+                        setQueue([nonVipSong]);
+                        setCurrentIndex(0);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error("Lỗi tải bài mới:", err);
+            }
+            setIsPlaying(false);
         }
     };
 
     const handleBack = () => {
+        const userInfo = localStorage.getItem('user_info');
+        const isUserVip = userInfo ? Boolean(JSON.parse(userInfo).vip) : false;
+
+
         if (currentIndex > 0) {
-            setCurrentIndex(prev => prev - 1);
+            const prevSong = queue[currentIndex - 1];
+
+
+            if (prevSong.vip && !isUserVip) {
+
+                const prevNonVipIndex = queue.findIndex((song, index) => index < currentIndex && !song.vip);
+
+
+                if (prevNonVipIndex !== -1) {
+                    setCurrentIndex(prevNonVipIndex);
+                } else {
+                    setCurrentIndex(0);
+                    if (playerRef.current) {
+                        playerRef.current.seekTo(0, true);
+                        playerRef.current.playVideo();
+                    }
+                }
+            } else {
+                setCurrentIndex(prev => prev - 1);
+            }
         } else {
             setCurrentIndex(0);
             if (playerRef.current) {
@@ -331,15 +462,11 @@ export default function MusicPlayer({ song, playlist: playlistProp }: MusicPlaye
         const rect = event.currentTarget.getBoundingClientRect();
         const menuWidth = 200;
         const menuHeight = 150;
-
         let x = rect.right + 10;
         let y = rect.top + rect.height / 2 - menuHeight / 2;
-
-
         if (x + menuWidth > window.innerWidth) {
             x = rect.left - menuWidth - 10;
         }
-
         if (y < 0) {
             y = 10;
         }

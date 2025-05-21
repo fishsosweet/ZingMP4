@@ -125,7 +125,8 @@ export default function GoiVip() {
                 package_id: selectedPackage.id,
                 amount: selectedPackage.gia,
                 user_id: user.id,
-                redirect: true
+                redirect: true,
+                return_url: `${window.location.origin}/zingmp4/payment-result`
             }, {
                 headers: {
                     'Content-Type': 'application/json',

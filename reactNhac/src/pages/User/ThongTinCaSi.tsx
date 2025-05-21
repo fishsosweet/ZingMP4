@@ -1,8 +1,9 @@
-import { FaPlay } from "react-icons/fa";
-import { Link, useParams } from "react-router-dom";
+import { FaPlay, FaCrown } from "react-icons/fa";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getThongTinCaSi } from "../../services/User/TrangChuService.tsx";
 import { useMusic } from "../../contexts/MusicContext";
+import axiosInstance from "../../../configs/axios.tsx";
 
 interface Song {
     id: number;
@@ -11,6 +12,7 @@ interface Song {
     audio_url: string;
     lyrics: string;
     luotthich: string;
+    vip: boolean;
 }
 
 interface Singer {
@@ -24,9 +26,35 @@ interface Singer {
 }
 
 export default function ThongTinCaSi() {
+    const navigate = useNavigate();
     const { id } = useParams();
     const [casi, setCaSi] = useState<Singer>();
     const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
+    const [isUserVip, setIsUserVip] = useState(false);
+
+    const refreshUserData = async () => {
+        try {
+            const token = localStorage.getItem('user_token');
+            if (!token) {
+                setIsUserVip(false);
+                return;
+            }
+            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            const res = await axiosInstance.get('/user/getThongTinUser');
+            if (res.data) {
+                localStorage.setItem('user_info', JSON.stringify(res.data));
+                setIsUserVip(Boolean(res.data.vip));
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    };
+
+    useEffect(() => {
+        refreshUserData();
+        const interval = setInterval(refreshUserData, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const fetchCaSi = async () => {
@@ -40,7 +68,18 @@ export default function ThongTinCaSi() {
         fetchCaSi();
     }, [id]);
 
-    const handlePlayAll = () => {
+    const handleVipRestriction = async (song: any) => {
+        if (song.vip === 1) {
+            await refreshUserData();
+            if (!isUserVip) {
+                navigate('/zingmp4/nang-cap');
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const handlePlayAll = async () => {
         if (casi && casi.baihats && casi.baihats.length > 0) {
             const songs = casi.baihats.map(song => ({
                 id: song.id,
@@ -48,6 +87,7 @@ export default function ThongTinCaSi() {
                 anh: song.anh,
                 audio_url: song.audio_url,
                 lyrics: song.lyrics,
+                vip: song.vip,
                 casi: {
                     id: casi.id,
                     ten_casi: casi.ten_casi,
@@ -56,13 +96,18 @@ export default function ThongTinCaSi() {
                     anh: casi.anh
                 }
             }));
+            const isRestricted = await handleVipRestriction(songs[0]);
+            if (isRestricted) return;
             setPlaylist(songs);
             setCurrentSong(songs[0]);
             setIsPlaying(true);
         }
     };
 
-    const handlePlaySong = (song: Song) => {
+    const handlePlaySong = async (song: Song) => {
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
+
         if (casi) {
             const formattedSong = {
                 id: song.id,
@@ -70,6 +115,7 @@ export default function ThongTinCaSi() {
                 anh: song.anh,
                 audio_url: song.audio_url,
                 lyrics: song.lyrics,
+                vip: song.vip,
                 casi: {
                     id: casi.id,
                     ten_casi: casi.ten_casi,
@@ -84,6 +130,7 @@ export default function ThongTinCaSi() {
                 anh: s.anh,
                 audio_url: s.audio_url,
                 lyrics: s.lyrics,
+                vip: s.vip,
                 casi: {
                     id: casi.id,
                     ten_casi: casi.ten_casi,
@@ -136,15 +183,28 @@ export default function ThongTinCaSi() {
                                     className="flex items-center justify-between hover:bg-[#2a2a3e] p-4 rounded-lg cursor-pointer"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <img
-                                            src={`http://127.0.0.1:8000/${song.anh}`}
-                                            alt={song.title}
-                                            className="w-14 h-14 rounded object-cover"
-                                            onClick={() => handlePlaySong(song)}
-                                        />
+                                        <div className="relative group">
+                                            <img
+                                                src={`http://127.0.0.1:8000/${song.anh}`}
+                                                alt={song.title}
+                                                className={`w-14 h-14 rounded object-cover ${song.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
+                                                onClick={() => handlePlaySong(song)}
+                                            />
+                                            <button
+                                                className="absolute inset-0 flex items-center justify-center text-white bg-opacity-50 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                                onClick={() => handlePlaySong(song)}
+                                            >
+                                                <FaPlay />
+                                            </button>
+                                            {song.vip === 1 && (
+                                                <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                                    <FaCrown className="w-3 h-3" />
+                                                </div>
+                                            )}
+                                        </div>
                                         <div>
                                             <Link to={`/zingmp4/thong-tin/${song.id}`}>
-                                                <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px]">
+                                                <span className={`font-semibold hover:text-[#9b4de0] text-[18px] truncate max-w-[150px] ${song.vip === 1 ? 'text-yellow-400' : ''}`}>
                                                     {song.title}
                                                 </span>
                                             </Link>
@@ -152,7 +212,6 @@ export default function ThongTinCaSi() {
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         ))}
                     </div>

@@ -1,9 +1,10 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { getThongTinBaiHat, getRelatedSongs } from "../../services/User/TrangChuService.tsx";
 import { useEffect, useState } from "react";
-import { FaHeart, FaPlay } from "react-icons/fa";
+import { FaHeart, FaPlay, FaCrown } from "react-icons/fa";
 import { useMusic } from "../../contexts/MusicContext.tsx";
 import { useLikedSongs } from "../../contexts/LikedSongsContext";
+import axiosInstance from "../../../configs/axios.tsx";
 
 interface Song {
     id: number;
@@ -24,14 +25,41 @@ interface Song {
     lyrics: string;
     luotthich: string;
     created_at: string;
+    vip: boolean;
 }
 
 export default function ThongTinBaiHat() {
+    const navigate = useNavigate();
     const { id } = useParams();
     const [baiHat, setBaiHat] = useState<Song>();
     const [relatedSongs, setRelatedSongs] = useState<Song[]>([]);
     const { setCurrentSong, setIsPlaying, setPlaylist } = useMusic();
     const { isLiked, toggleLike, isLoading: isLikedLoading } = useLikedSongs();
+    const [isUserVip, setIsUserVip] = useState(false);
+
+    const refreshUserData = async () => {
+        try {
+            const token = localStorage.getItem('user_token');
+            if (!token) {
+                setIsUserVip(false);
+                return;
+            }
+            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            const res = await axiosInstance.get('/user/getThongTinUser');
+            if (res.data) {
+                localStorage.setItem('user_info', JSON.stringify(res.data));
+                setIsUserVip(Boolean(res.data.vip));
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    };
+
+    useEffect(() => {
+        refreshUserData();
+        const interval = setInterval(refreshUserData, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     const thongTinBaiHat = async () => {
         try {
@@ -50,7 +78,20 @@ export default function ThongTinBaiHat() {
         }
     }, [id]);
 
-    const handlePlaySong = (song: Song) => {
+    const handleVipRestriction = async (song: any) => {
+        if (song.vip === 1) {
+            await refreshUserData();
+            if (!isUserVip) {
+                navigate('/zingmp4/nang-cap');
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const handlePlaySong = async (song: Song) => {
+        const isRestricted = await handleVipRestriction(song);
+        if (isRestricted) return;
         setCurrentSong(song);
         setPlaylist([song]);
         setIsPlaying(true);
@@ -60,6 +101,8 @@ export default function ThongTinBaiHat() {
         e.preventDefault();
         e.stopPropagation();
         if (!baiHat) return;
+        const isRestricted = await handleVipRestriction(baiHat);
+        if (isRestricted) return;
         try {
             await toggleLike(baiHat.id);
         } catch (error) {
@@ -73,15 +116,27 @@ export default function ThongTinBaiHat() {
         <div className="bg-[#120320] text-white font-sans min-h-screen px-10 py-15">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
                 <div className="flex-shrink-0">
-                    <img
-                        src={`http://127.0.0.1:8000/${baiHat.anh}`}
-                        alt={baiHat.title}
-                        className="rounded-xl w-64 h-64 object-cover"
-                    />
-                    <h2 className="text-2xl font-bold mt-4">{baiHat.title}</h2>
+                    <div className="relative group">
+                        <img
+                            src={`http://127.0.0.1:8000/${baiHat.anh}`}
+                            alt={baiHat.title}
+                            className={`rounded-xl w-64 h-64 object-cover ${baiHat.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
+                        />
+                        <button
+                            className="absolute inset-0 flex items-center justify-center text-white bg-opacity-50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            onClick={() => handlePlaySong(baiHat)}
+                        >
+                            <FaPlay size={40} />
+                        </button>
+                        {baiHat.vip === 1 && (
+                            <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-2">
+                                <FaCrown className="w-4 h-4" />
+                            </div>
+                        )}
+                    </div>
+                    <h2 className={`text-2xl font-bold mt-4 ${baiHat.vip === 1 ? 'text-yellow-400' : ''}`}>{baiHat.title}</h2>
                     <Link to={`/zingmp4/thong-tin-ca-si/${baiHat.casi.id}`} className="inline-block max-w-fit">
-                        <span
-                            className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{baiHat.casi?.ten_casi}</span>
+                        <span className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">{baiHat.casi?.ten_casi}</span>
                     </Link>
                     <p className="text-sm text-gray-400">Trạng thái thích: {isLiked(baiHat.id) ? 'Đã thích' : 'Chưa thích'}</p>
                 </div>
@@ -91,14 +146,27 @@ export default function ThongTinBaiHat() {
                         key={baiHat.id}
                         className="flex items-center p-3 hover:bg-[#2a2a3e] rounded-lg cursor-pointer"
                     >
-                        <img
-                            src={`http://127.0.0.1:8000/${baiHat.anh}`}
-                            alt={baiHat.title}
-                            className="w-15 h-15 rounded mr-4"
-                            onClick={() => handlePlaySong(baiHat)}
-                        />
+                        <div className="relative group">
+                            <img
+                                src={`http://127.0.0.1:8000/${baiHat.anh}`}
+                                alt={baiHat.title}
+                                className={`w-15 h-15 rounded mr-4 ${baiHat.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
+                                onClick={() => handlePlaySong(baiHat)}
+                            />
+                            <button
+                                className="absolute inset-0 flex items-center justify-center text-white bg-opacity-50 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                onClick={() => handlePlaySong(baiHat)}
+                            >
+                                <FaPlay />
+                            </button>
+                            {baiHat.vip === 1 && (
+                                <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                    <FaCrown className="w-3 h-3" />
+                                </div>
+                            )}
+                        </div>
                         <div className="flex-1">
-                            <div className="font-semibold">{baiHat.title}</div>
+                            <div className={`font-semibold ${baiHat.vip === 1 ? 'text-yellow-400' : ''}`}>{baiHat.title}</div>
                             <Link to={`/zingmp4/thong-tin-ca-si/${baiHat.casi.id}`} className="inline-block max-w-fit">
                                 <span className="text-xs text-gray-400 hover:text-[#9b4de0] truncate max-w-[180px]">
                                     {baiHat.casi.ten_casi}
@@ -143,14 +211,13 @@ export default function ThongTinBaiHat() {
                         {relatedSongs.map((song) => (
                             <div
                                 key={song.id}
-                                className=" rounded-lg p-4 hover:bg-[#3a3a4e] transition-colors cursor-pointer"
-
+                                className="rounded-lg p-4 hover:bg-[#3a3a4e] transition-colors cursor-pointer"
                             >
                                 <div className="relative group" onClick={() => handlePlaySong(song)}>
                                     <img
                                         src={`http://127.0.0.1:8000/${song.anh}`}
                                         alt={song.title}
-                                        className="w-full aspect-square rounded-lg object-cover mb-3"
+                                        className={`w-full aspect-square rounded-lg object-cover mb-3 ${song.vip === 1 ? 'ring-2 ring-yellow-400' : ''}`}
                                     />
                                     <button
                                         className="absolute bottom-3 right-3 w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -161,9 +228,14 @@ export default function ThongTinBaiHat() {
                                     >
                                         <FaPlay className="text-white" />
                                     </button>
+                                    {song.vip === 1 && (
+                                        <div className="absolute -top-2 -right-2 bg-yellow-400 text-black rounded-full p-1">
+                                            <FaCrown className="w-3 h-3" />
+                                        </div>
+                                    )}
                                 </div>
                                 <Link to={`/zingmp4/thong-tin/${song.id}`}>
-                                    <span className="font-semibold hover:text-[#9b4de0] text-[18px] truncate block max-w-[190px] whitespace-nowrap overflow-hidden"
+                                    <span className={`font-semibold hover:text-[#9b4de0] text-[18px] truncate block max-w-[190px] whitespace-nowrap overflow-hidden ${song.vip === 1 ? 'text-yellow-400' : ''}`}
                                         title={song.title}>
                                         {song.title}
                                     </span>
