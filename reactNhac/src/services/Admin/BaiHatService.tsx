@@ -2,34 +2,34 @@ import axiosInstance from "../../../configs/axios.tsx";
 
 type post = {
     tenBaiHat: string,
-    idCaSi:string,
+    idCaSi: string,
     idTheLoai: string,
     audio_URL: string,
-    anh:File,
-    thoiLuong:number,
-    trangThai:boolean,
-    loiBaiHat:string,
-    vip:boolean,
+    anh: File,
+    thoiLuong: number,
+    trangThai: boolean,
+    loiBaiHat: string,
+    vip: boolean,
     ngayTao?: Date,
-    ngayCapNhat?:Date
+    ngayCapNhat?: Date
 };
 
-const getDSTheLoai =async ()=>{
-    try{
-        const res=await axiosInstance.get('/auth/dsTheLoai');
+const getDSTheLoai = async () => {
+    try {
+        const res = await axiosInstance.get('/auth/dsTheLoai');
         return res.data
-    }catch (error: any){
+    } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
-const getDSCaSi =async ()=>{
-    try{
-        const res=await axiosInstance.get('/auth/dsCaSi');
+const getDSCaSi = async () => {
+    try {
+        const res = await axiosInstance.get('/auth/dsCaSi');
         return res.data
-    }catch (error: any){
+    } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
 
@@ -39,7 +39,7 @@ const getThongTinBaiHat = async (id: number) => {
         return res.data
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
 
@@ -64,14 +64,14 @@ const postBaiHat = async (baihat: post) => {
             }
         });
 
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 };
 
-const postSuaBaiHat = async (baihat: post,id: number) => {
+const postSuaBaiHat = async (baihat: post, id: number) => {
     try {
         const formData = new FormData();
         formData.append('tenBaiHat', baihat.tenBaiHat);
@@ -85,12 +85,12 @@ const postSuaBaiHat = async (baihat: post,id: number) => {
         formData.append('anh', baihat.anh);
         // @ts-ignore
         formData.append('ngayCapNhat', baihat.ngayCapNhat);
-        const response = await axiosInstance.post(`/auth/postSuaBaiHat/${id}`,  formData, {
+        const response = await axiosInstance.post(`/auth/postSuaBaiHat/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
         })
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         throw error.response?.data?.error
     }
@@ -98,9 +98,9 @@ const postSuaBaiHat = async (baihat: post,id: number) => {
 
 
 
-const getListBaiHat = async (page: number) => {
+const getListBaiHat = async (page: number, per_page: number = 10) => {
     try {
-        const response = await axiosInstance.get(`/auth/getListBaiHat?page=${page}`);
+        const response = await axiosInstance.get(`/auth/getListBaiHat?page=${page}&per_page=${per_page}`);
         return response.data;
     } catch (error: any) {
         throw error.response?.data?.error || 'Đã xảy ra lỗi!';
@@ -142,4 +142,4 @@ const addSongToPlaylist = async (playlistId: number, selectedSongId: number | nu
     }
 };
 
-export {postBaiHat,getListBaiHat,deleteBaiHat,postSuaBaiHat,getDSTheLoai,getDSCaSi,getThongTinBaiHat,openPlaylist,addSongToPlaylist};
+export { postBaiHat, getListBaiHat, deleteBaiHat, postSuaBaiHat, getDSTheLoai, getDSCaSi, getThongTinBaiHat, openPlaylist, addSongToPlaylist };

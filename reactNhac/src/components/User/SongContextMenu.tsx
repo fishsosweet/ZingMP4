@@ -141,12 +141,12 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
     const style: React.CSSProperties = {
         position: 'fixed',
         top: position.y,
-        left: position.x - 350,
+        left: position.x,
         backgroundColor: '#2a1a40',
         border: '1px solid #3f2c5a',
         borderRadius: '8px',
         padding: '8px 0',
-        zIndex: 1000,
+        zIndex: 9999,
         color: 'white',
         fontSize: '14px',
         minWidth: '200px',
@@ -162,8 +162,8 @@ const SongContextMenu: React.FC<SongContextMenuProps> = ({
                     className="w-12 h-12 rounded-md object-cover"
                 />
                 <div className="flex-1 overflow-hidden">
-                    <div className="font-semibold text-sm truncate">{song.title}</div>
-                    <div className="text-xs text-gray-400 truncate">{song.casi.ten_casi}</div>
+                    <div className="font-semibold text-sm truncate max-w-[100px] whitespace-nowrap overflow-hidden text-ellipsis">{song.title}</div>
+                    <div className="text-xs text-gray-400 truncate max-w-[100px] whitespace-nowrap overflow-hidden text-ellipsis">{song.casi.ten_casi}</div>
                 </div>
                 <button
                     onClick={handleLikeClick}

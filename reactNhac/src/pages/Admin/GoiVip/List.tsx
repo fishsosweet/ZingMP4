@@ -1,46 +1,59 @@
 import ReactPaginate from "react-paginate";
-import { useState, useEffect } from 'react';
-import Sidebar from '../SideBar';
-import { getListCaSi, deleteCaSi } from "../../../services/Admin/CaSiService";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
+import Sidebar from '../SideBar';
+import { getListGoiVip, deleteGoiVip } from "../../../services/Admin/GoiVipService";
 
+interface GoiVip {
+    id: number;
+    gia: number;
+    thoi_han: number;
+    trangthai: number;
+    updated_at: string;
+}
 
-const ListCaSi = () => {
-    const [list, setList] = useState<any[]>([]);
+const ListGoiVip = () => {
+    const [list, setList] = useState<GoiVip[]>([]);
     const [pageCount, setPageCount] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [perPage, setPerPage] = useState<number>(10);
+    const [thongBao, setThongBao] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
     const getData = async (page: number) => {
-        const res = await getListCaSi(page, perPage);
-        if (res && Array.isArray(res.data)) {
-            setList(res.data);
-            setPageCount(res.last_page);
-        } else {
+        try {
+            const response = await getListGoiVip(page, perPage);
+            if (response) {
+                setList(response.data);
+                setPageCount(response.last_page);
+            }
+        } catch (error: any) {
+            setThongBao({
+                type: 'error',
+                message: error.message || 'Không thể lấy danh sách gói VIP'
+            });
             setList([]);
         }
-    }
+    };
 
     const handleDelete = async (id: number) => {
-        const confirmDelete = confirm("Bạn có chắc chắn muốn xóa thể loại này?");
+        const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa gói VIP này?");
         if (!confirmDelete) return;
-        try {
-            await deleteCaSi(id);
-            alert("Đã xóa thành công");
-            if (list.length === 1 && currentPage > 1) {
-                const newPage = currentPage - 1;
-                setCurrentPage(newPage);
-            } else {
-                if (list.length === 1)
-                    window.location.reload();
-                else
-                    setCurrentPage(currentPage);
-            }
 
-            await getData(currentPage);
+        try {
+            await deleteGoiVip(id);
+            setThongBao({ type: 'success', message: 'Xóa gói VIP thành công' });
+
+            if (list.length === 1 && currentPage > 1) {
+                setCurrentPage(currentPage - 1);
+            } else {
+                await getData(currentPage);
+            }
         } catch (error: any) {
-            alert("Xóa thất bại! " + (error.message || "Lỗi không xác định"));
+            setThongBao({
+                type: 'error',
+                message: error.message || 'Xóa thất bại! Lỗi không xác định'
+            });
         }
     };
 
@@ -48,7 +61,7 @@ const ListCaSi = () => {
         getData(currentPage);
     }, [currentPage, perPage]);
 
-    const handlePageClick = (data: any) => {
+    const handlePageClick = (data: { selected: number }) => {
         setCurrentPage(data.selected + 1);
     };
 
@@ -57,13 +70,26 @@ const ListCaSi = () => {
         setCurrentPage(1);
     };
 
-    // @ts-ignore
+    useEffect(() => {
+        if (thongBao) {
+            const timer = setTimeout(() => setThongBao(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [thongBao]);
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(amount);
+    };
+
     return (
         <div className="flex">
             <Sidebar />
             <div className="flex-1 p-10">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Danh Sách Ca Sĩ</h1>
+                    <h1 className="text-2xl font-bold">Danh Sách Gói VIP</h1>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <label htmlFor="perPage" className="text-sm font-medium text-gray-700">
@@ -84,21 +110,34 @@ const ListCaSi = () => {
                             </select>
                         </div>
                         <Link
-                            to="/admin/add-singers"
+                            to="/admin/add-goi-vip"
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         >
-                            Thêm Ca Sĩ Mới
+                            Thêm Gói VIP Mới
                         </Link>
                     </div>
                 </div>
-                <table className="text-black w-full text-center border border-black border-collapse table-auto ">
+
+                {thongBao && (
+                    <div
+                        className={`px-4 py-3 rounded relative border mb-4
+                            ${thongBao.type === 'success'
+                                ? 'bg-green-100 border-green-400 text-green-700'
+                                : 'bg-red-100 border-red-400 text-red-700'
+                            }`}
+                        role="alert"
+                    >
+                        <span className="block sm:inline">{thongBao.message}</span>
+                    </div>
+                )}
+
+                <table className="text-black w-full text-center border border-black border-collapse">
                     <thead>
                         <tr className="bg-blue-300 border border-black">
                             <th className="w-[50px] border border-black">ID</th>
-                            <th className="border border-black">Tên ca sĩ</th>
-                            <th className="border border-black">Giới tính</th>
-                            <th className="border border-black">Mô tả</th>
-                            <th className="border border-black">Ảnh</th>
+                            <th className="border border-black">Giá</th>
+                            <th className="border border-black">Thời hạn (Tháng)</th>
+                            <th className="border border-black">Trạng thái</th>
                             <th className="border border-black">Cập nhật</th>
                             <th className="border border-black">Thao tác</th>
                         </tr>
@@ -108,21 +147,14 @@ const ListCaSi = () => {
                             list.map((item) => (
                                 <tr key={item.id}>
                                     <td className="w-[50px] bg-white text-black border border-black">{item.id}</td>
-                                    <td className="bg-white text-black border border-black">{item.ten_casi}</td>
-                                    <td className="bg-white text-black border border-black">
-                                        {item.gioitinh}
-                                    </td>
-                                    <td className="bg-white text-black border border-black">
-                                        {item.mota}
-                                    </td>
-                                    <td className="bg-white text-black border border-black p-2">
-                                        <div className="flex justify-center items-center h-[60px] w-full">
-                                            <img
-                                                src={`http://127.0.0.1:8000/${item.anh}`}
-                                                className="w-[60px] h-[60px]"
-                                                alt="Poster"
-                                            />
-                                        </div>
+                                    <td className="bg-white text-black border border-black">{formatCurrency(item.gia)}</td>
+                                    <td className="bg-white text-black border border-black">{item.thoi_han}</td>
+                                    <td className="bg-white text-black text-center border border-black">
+                                        {item.trangthai === 1 ? (
+                                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">YES</span>
+                                        ) : (
+                                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">NO</span>
+                                        )}
                                     </td>
 
                                     <td className="bg-white text-black border border-black">
@@ -130,25 +162,24 @@ const ListCaSi = () => {
                                     </td>
                                     <td className="p-2 border border-black">
                                         <Link
-                                            to={`/admin/singers/edit/${item.id}`}
+                                            to={`/admin/goi-vip/edit/${item.id}`}
                                             className="bg-blue-500 px-2 py-1 text-white rounded m-1 inline-block"
                                         >
                                             Sửa
                                         </Link>
-                                        <button className="bg-red-500 px-2 py-1 text-white rounded cursor-pointer"
+                                        <button
+                                            className="bg-red-500 px-2 py-1 text-white rounded m-1 cursor-pointer"
                                             onClick={() => handleDelete(item.id)}
                                         >
                                             Xóa
                                         </button>
                                     </td>
-
-
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={6} className="bg-red-100 border border-red-400 text-red-700 text-center">
-                                    {list.length === 0 ? "Không có dữ liệu" : list}
+                                <td colSpan={7} className="bg-red-100 border border-red-400 text-red-700 text-center">
+                                    Không có dữ liệu
                                 </td>
                             </tr>
                         )}
@@ -161,17 +192,15 @@ const ListCaSi = () => {
                     pageCount={pageCount}
                     onPageChange={handlePageClick}
                     containerClassName="flex justify-center items-center space-x-2 mt-4"
-                    activeClassName="bg-blue-500 text-white border border-blue-500 w-[42px] h-10 flex items-center justify-center rounded-md" // Đảm bảo trang active có diện tích và căn giữa
+                    activeClassName="bg-blue-500 text-white border border-blue-500 w-[42px] h-10 flex items-center justify-center rounded-md"
                     pageClassName="page-item"
                     pageLinkClassName="page-link px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
                     previousClassName="prev-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     nextClassName="next-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-
-
             </div>
         </div>
     );
 };
 
-export default ListCaSi;
+export default ListGoiVip;

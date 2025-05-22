@@ -12,7 +12,7 @@ interface Song {
     audio_url: string;
     lyrics: string;
     luotthich: string;
-    vip: boolean;
+    vip: number;
 }
 
 interface Singer {

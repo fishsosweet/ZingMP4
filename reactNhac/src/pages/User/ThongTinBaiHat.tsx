@@ -25,7 +25,7 @@ interface Song {
     lyrics: string;
     luotthich: string;
     created_at: string;
-    vip: boolean;
+    vip: number;
 }
 
 export default function ThongTinBaiHat() {

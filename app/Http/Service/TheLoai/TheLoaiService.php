@@ -32,9 +32,9 @@ class TheLoaiService extends Controller
         try {
             $theloai = TheLoai::find($id);
             return response()->json($theloai);
-        }catch (\Exception $exception) {
+        } catch (\Exception $exception) {
             return response()->json([
-                'error' =>"ID không tồn tại",
+                'error' => "ID không tồn tại",
                 'message' => $exception->getMessage(),
             ], 500);
         }
@@ -42,7 +42,8 @@ class TheLoaiService extends Controller
 
     public function list()
     {
-        $theLoai = TheLoai::select('id', 'ten_theloai', 'trangthai', 'updated_at')->paginate(10);;
+        $per_page = request()->get('per_page', 10);
+        $theLoai = TheLoai::select('id', 'ten_theloai', 'trangthai', 'updated_at')->paginate($per_page);
         if ($theLoai->count() > 0)
             return response()->json($theLoai, 200);
         return response()->json(['error' => 'Không có dữ liệu'], 500);
@@ -80,5 +81,4 @@ class TheLoaiService extends Controller
         $theloai->delete();
         return response()->json(['success' => 'Xóa thành công']);
     }
-
 }

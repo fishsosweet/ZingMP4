@@ -11,7 +11,7 @@ interface Song {
     };
     audio_url: string;
     lyrics: string;
-    vip: boolean;
+    vip: number;
 }
 
 interface MusicContextType {

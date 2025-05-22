@@ -9,7 +9,7 @@ class GoiVip extends Model
 {
 
     use HasFactory;
-    protected $table='goi_vips';
+    protected $table = 'goi_vips';
     protected $fillable = [
         'id',
         'gia',
@@ -17,10 +17,9 @@ class GoiVip extends Model
         'trangthai',
         'created_at',
         'updated_at',
-        ];
+    ];
     public function users()
     {
         return $this->hasMany(UserGoiVip::class);
     }
-
 }

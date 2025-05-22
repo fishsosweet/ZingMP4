@@ -13,12 +13,12 @@ class BaiHatService extends Controller
 {
     public function theLoai()
     {
-        $theLoai=TheLoai::select('id','ten_theloai')->get();
+        $theLoai = TheLoai::select('id', 'ten_theloai')->get();
         return response()->json($theLoai);
     }
     public function caSi()
     {
-        $caSi=Casi::select('id','ten_casi')->get();
+        $caSi = Casi::select('id', 'ten_casi')->get();
         return response()->json($caSi);
     }
 
@@ -29,8 +29,8 @@ class BaiHatService extends Controller
             'anh' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
         try {
-            $pathanh='';
-            if($request->hasFile('anh') && $request->file('anh')->isValid()){
+            $pathanh = '';
+            if ($request->hasFile('anh') && $request->file('anh')->isValid()) {
                 $nameimage = $request->file('anh')->getClientOriginalName();
                 $path = 'uploads/' . date("Y/m/d");
                 if (!file_exists(public_path($path))) {
@@ -38,18 +38,17 @@ class BaiHatService extends Controller
                 }
                 $request->file('anh')->move(public_path($path), $nameimage);
                 $pathanh = $path . '/' . $nameimage;
-
             }
             Baihat::create([
                 'title' => $request->tenBaiHat,
                 'casi_id' => $request->idCaSi,
                 'theloai_id' => $request->idTheLoai,
-                'audio_url'=> $request->audio_URL,
+                'audio_url' => $request->audio_URL,
                 'thoiluong' => $request->thoiLuong,
-                'trangthai'=>$request->trangThai,
-                'lyrics'=> $request->loiBaiHat,
-                'vip'=>$request->vip,
-                'anh'=> $pathanh,
+                'trangthai' => $request->trangThai,
+                'lyrics' => $request->loiBaiHat,
+                'vip' => $request->vip,
+                'anh' => $pathanh,
                 'created_at' => $request->ngayTao,
             ]);
             return response()->json([
@@ -61,7 +60,6 @@ class BaiHatService extends Controller
                 'message' => $exception->getMessage(),
             ], 500);
         }
-
     }
 
 
@@ -77,8 +75,8 @@ class BaiHatService extends Controller
 
                 return response()->json(['error' => 'Bài hát không tồn tại'], 404);
             }
-            $pathanh='';
-            if($request->hasFile('anh') && $request->file('anh')->isValid()){
+            $pathanh = '';
+            if ($request->hasFile('anh') && $request->file('anh')->isValid()) {
                 $nameimage = $request->file('anh')->getClientOriginalName();
                 $path = 'uploads/' . date("Y/m/d");
                 if (!file_exists(public_path($path))) {
@@ -86,18 +84,17 @@ class BaiHatService extends Controller
                 }
                 $request->file('anh')->move(public_path($path), $nameimage);
                 $pathanh = $path . '/' . $nameimage;
-
             }
 
-            $baihat->title= $request->tenBaiHat;
+            $baihat->title = $request->tenBaiHat;
             $baihat->casi_id = $request->idCaSi;
             $baihat->theloai_id = $request->idTheLoai;
             $baihat->audio_url = $request->audio_URL;
             $baihat->trangthai = $request->trangThai;
             $baihat->thoiLuong = $request->thoiLuong;
-            $baihat->lyrics= $request->loiBaiHat;
-            $baihat->vip= $request->vip;
-            $baihat->anh =$pathanh;
+            $baihat->lyrics = $request->loiBaiHat;
+            $baihat->vip = $request->vip;
+            $baihat->anh = $pathanh;
             $baihat->updated_at = $request->ngayCapNhat;
             $baihat->save();
             return response()->json(['success' => 'Cập nhật bài hát thành công'], 200);
@@ -112,9 +109,10 @@ class BaiHatService extends Controller
 
     public function list()
     {
+        $per_page = request()->get('per_page', 10);
         $BaiHat = Baihat::with(['casi:id,ten_casi', 'theloai:id,ten_theloai'])
-            ->select('id', 'title', 'audio_url','thoiluong','trangthai', 'anh', 'casi_id', 'theloai_id', 'updated_at','vip')
-            ->paginate(10);
+            ->select('id', 'title', 'audio_url', 'thoiluong', 'trangthai', 'anh', 'casi_id', 'theloai_id', 'updated_at', 'vip')
+            ->paginate($per_page);
         if ($BaiHat->count() > 0)
             return response()->json($BaiHat, 201);
         return response()->json(['error' => 'Không có dữ liệu'], 500);
@@ -125,9 +123,9 @@ class BaiHatService extends Controller
         try {
             $baihat = Baihat::find($id);
             return response()->json($baihat);
-        }catch (\Exception $exception) {
+        } catch (\Exception $exception) {
             return response()->json([
-                'error' =>"ID không tồn tại",
+                'error' => "ID không tồn tại",
                 'message' => $exception->getMessage(),
             ], 500);
         }
@@ -147,7 +145,7 @@ class BaiHatService extends Controller
     public function getPlaylists()
     {
         $user = auth('api')->id();
-        $playlists = Playlist::where('user_id', $user)->where('trangthai',1)->select('id', 'ten_playlist')->get();
+        $playlists = Playlist::where('user_id', $user)->where('trangthai', 1)->select('id', 'ten_playlist')->get();
         return response()->json($playlists);
     }
 

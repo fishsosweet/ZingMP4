@@ -4,7 +4,7 @@ type post = {
     tenCaSi: string,
     gioiTinh: string,
     moTa: string,
-    anh:File,
+    anh: File,
     ngayTao?: Date,
     ngayCapNhat?: Date,
 }
@@ -25,10 +25,10 @@ const postCaSi = async (casi: post) => {
             }
         });
 
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 };
 
@@ -38,10 +38,10 @@ const getThongTinCaSi = async (id: number) => {
         return res.data
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
-const postSuaCaSi = async (casi: post,id: number) => {
+const postSuaCaSi = async (casi: post, id: number) => {
     try {
         const formData = new FormData();
         formData.append('tenCaSi', casi.tenCaSi);
@@ -50,20 +50,20 @@ const postSuaCaSi = async (casi: post,id: number) => {
         formData.append('anh', casi.anh);
         // @ts-ignore
         formData.append('ngayCapNhat', casi.ngayCapNhat);
-        const response = await axiosInstance.post(`/auth/postSuaCaSi/${id}`,  formData, {
+        const response = await axiosInstance.post(`/auth/postSuaCaSi/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
         })
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         throw error.response?.data?.error
     }
 }
 
-const getListCaSi = async (page: number) => {
+const getListCaSi = async (page: number, per_page: number = 10) => {
     try {
-        const response = await axiosInstance.get(`/auth/getListCaSi?page=${page}`);
+        const response = await axiosInstance.get(`/auth/getListCaSi?page=${page}&per_page=${per_page}`);
         return response.data;
     } catch (error: any) {
         throw error.response?.data?.error || 'Đã xảy ra lỗi!';
@@ -80,4 +80,4 @@ const deleteCaSi = async (id: number) => {
 };
 
 
-export {postCaSi,getListCaSi,deleteCaSi,postSuaCaSi,getThongTinCaSi};
+export { postCaSi, getListCaSi, deleteCaSi, postSuaCaSi, getThongTinCaSi };

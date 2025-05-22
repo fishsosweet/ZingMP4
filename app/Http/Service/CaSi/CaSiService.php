@@ -16,8 +16,8 @@ class CaSiService extends Controller
             'anh' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
         try {
-            $pathanh='';
-            if($request->hasFile('anh') && $request->file('anh')->isValid()){
+            $pathanh = '';
+            if ($request->hasFile('anh') && $request->file('anh')->isValid()) {
                 $nameimage = $request->file('anh')->getClientOriginalName();
                 $path = 'uploads/' . date("Y/m/d");
                 if (!file_exists(public_path($path))) {
@@ -25,13 +25,12 @@ class CaSiService extends Controller
                 }
                 $request->file('anh')->move(public_path($path), $nameimage);
                 $pathanh = $path . '/' . $nameimage;
-
             }
             Casi::create([
                 'ten_casi' => $request->tenCaSi,
-                'gioitinh'=> $request->gioiTinh,
+                'gioitinh' => $request->gioiTinh,
                 'mota' => $request->moTa,
-                'anh'=> $pathanh,
+                'anh' => $pathanh,
                 'created_at' => $request->ngayTao,
             ]);
             return response()->json([
@@ -56,8 +55,8 @@ class CaSiService extends Controller
 
                 return response()->json(['error' => 'Ca sĩ không tồn tại'], 404);
             }
-            $pathanh='';
-            if($request->hasFile('anh') && $request->file('anh')->isValid()){
+            $pathanh = '';
+            if ($request->hasFile('anh') && $request->file('anh')->isValid()) {
                 $nameimage = $request->file('anh')->getClientOriginalName();
                 $path = 'uploads/' . date("Y/m/d");
                 if (!file_exists(public_path($path))) {
@@ -65,13 +64,12 @@ class CaSiService extends Controller
                 }
                 $request->file('anh')->move(public_path($path), $nameimage);
                 $pathanh = $path . '/' . $nameimage;
-
             }
 
-            $casi->ten_casi= $request->tenCaSi;
+            $casi->ten_casi = $request->tenCaSi;
             $casi->gioitinh = $request->gioiTinh;
             $casi->mota = $request->moTa;
-            $casi->anh =$pathanh;
+            $casi->anh = $pathanh;
             $casi->updated_at = $request->ngayCapNhat;
             $casi->save();
             return response()->json(['success' => 'Cập nhật ca sĩ thành công'], 200);
@@ -86,7 +84,8 @@ class CaSiService extends Controller
 
     public function list()
     {
-        $Casi = Casi::select('id', 'ten_casi', 'gioitinh', 'mota', 'anh','updated_at')->paginate(10);
+        $per_page = request()->get('per_page', 10);
+        $Casi = Casi::select('id', 'ten_casi', 'gioitinh', 'mota', 'anh', 'updated_at')->paginate($per_page);
         if ($Casi->count() > 0)
             return response()->json($Casi, 200);
         return response()->json(['error' => 'Không có dữ liệu'], 500);
@@ -108,9 +107,9 @@ class CaSiService extends Controller
         try {
             $casi = Casi::find($id);
             return response()->json($casi);
-        }catch (\Exception $exception) {
+        } catch (\Exception $exception) {
             return response()->json([
-                'error' =>"ID không tồn tại",
+                'error' => "ID không tồn tại",
                 'message' => $exception->getMessage(),
             ], 500);
         }

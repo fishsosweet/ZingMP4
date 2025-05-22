@@ -23,7 +23,6 @@ class PlaylistService extends Controller
                 }
                 $request->file('anh')->move(public_path($path), $nameimage);
                 $pathanh = $path . '/' . $nameimage;
-
             }
 
             Playlist::create([
@@ -56,8 +55,8 @@ class PlaylistService extends Controller
 
                 return response()->json(['error' => 'Playlist không tồn tại'], 404);
             }
-            $pathanh='';
-            if($request->hasFile('anh') && $request->file('anh')->isValid()){
+            $pathanh = '';
+            if ($request->hasFile('anh') && $request->file('anh')->isValid()) {
                 $nameimage = $request->file('anh')->getClientOriginalName();
                 $path = 'uploads/' . date("Y/m/d");
                 if (!file_exists(public_path($path))) {
@@ -65,13 +64,12 @@ class PlaylistService extends Controller
                 }
                 $request->file('anh')->move(public_path($path), $nameimage);
                 $pathanh = $path . '/' . $nameimage;
-
             }
 
-            $playlist->ten_playlist= $request->tenPlaylist;
+            $playlist->ten_playlist = $request->tenPlaylist;
             $playlist->trangthai = $request->trangThai;
             $playlist->theloai_id = $request->theloai_id;
-            $playlist->anh =$pathanh;
+            $playlist->anh = $pathanh;
             $playlist->updated_at = $request->ngayCapNhat;
             $playlist->save();
             return response()->json(['success' => 'Cập nhật playlist thành công'], 200);
@@ -86,10 +84,11 @@ class PlaylistService extends Controller
 
     public function list()
     {
+        $per_page = request()->get('per_page', 10);
         $playlist = Playlist::with('user:id,name')
             ->where('user_id', auth('api')->id())
             ->select('id', 'ten_playlist', 'trangthai', 'anh', 'user_id', 'updated_at')
-            ->paginate(10);
+            ->paginate($per_page);
 
         if ($playlist->count() > 0)
             return response()->json($playlist, 200);
@@ -106,7 +105,7 @@ class PlaylistService extends Controller
         return response()->json(['success' => 'Xóa thành công']);
     }
 
-    public function destroySong($playlistId,$songId)
+    public function destroySong($playlistId, $songId)
     {
         $playlist = Playlist::find($playlistId);
         if (!$playlist) {
@@ -122,9 +121,9 @@ class PlaylistService extends Controller
         try {
             $playlist = Playlist::find($id);
             return response()->json($playlist);
-        }catch (\Exception $exception) {
+        } catch (\Exception $exception) {
             return response()->json([
-                'error' =>"ID không tồn tại",
+                'error' => "ID không tồn tại",
                 'message' => $exception->getMessage(),
             ], 500);
         }
@@ -139,5 +138,4 @@ class PlaylistService extends Controller
         }
         return response()->json($playlist->baihats);
     }
-
 }

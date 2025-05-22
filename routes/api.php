@@ -2,18 +2,19 @@
 
 use App\Http\Controllers\Admin\BaiHat\BaiHatController;
 use App\Http\Controllers\Admin\CaSi\CaSiController;
+use App\Http\Controllers\Admin\GoiVip\GoiVipController;
 use App\Http\Controllers\Admin\Login\apiLoginAdmin;
 use App\Http\Controllers\Admin\Playlist\PlaylistController;
 use App\Http\Controllers\Admin\TheLoai\TheLoaiController;
 use App\Http\Controllers\User\BaiMoi\BaiMoiController;
 use App\Http\Controllers\User\ChuDe\ChuDeController;
 use App\Http\Controllers\User\Login\apiLoginUser;
+use App\Http\Controllers\User\ThongTinUser\ThongTinUser;
 use App\Http\Controllers\User\TrangChu\TrangChuController;
-use App\Http\Controllers\User\ZingChart\ZingChartController;
 use App\Http\Controllers\User\Vip\VipController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\User\ZingChart\ZingChartController;
 use Illuminate\Support\Facades\Route;
-use \App\Http\Controllers\User\ThongTinUser\ThongTinUser;
+
 /*Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');*/
@@ -24,6 +25,9 @@ Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 ], function () {
+    //ThongTin
+    Route::get('getThongTin', [apiLoginAdmin::class, 'getThongTin']);
+
     //TheLoai
     Route::post('postTheLoai', [TheLoaiController::class, 'postTheLoai']);
     Route::get('getListTheLoai', [TheLoaiController::class, 'getList']);
@@ -60,6 +64,13 @@ Route::group([
 
     //Profile
     Route::get('/getAdminProfile', [apiLoginAdmin::class, 'getAdminProfile']);
+
+    // GoiVip
+    Route::post('/postGoiVip', [GoiVipController::class, 'post']);
+    Route::get('/thongTinGoiVip/{id}', [GoiVipController::class, 'getID']);
+    Route::post('/postSuaGoiVip/{id}', [GoiVipController::class, 'update']);
+    Route::get('/getListGoiVip', [GoiVipController::class, 'list']);
+    Route::delete('/deleteGoiVip/{id}', [GoiVipController::class, 'destroy']);
 });
 
 Route::prefix('user')->group(function () {
@@ -93,6 +104,8 @@ Route::prefix('user')->group(function () {
     Route::get('getThongTinBaiHat/{id}', [TrangChuController::class, 'thongTinBaiHat']);
     Route::get('getThongTinCaSi/{id}', [TrangChuController::class, 'thongTinCaSi']);
     Route::post('nextSongs', [TrangChuController::class, 'getNextSongs']);
+    Route::post('nextSongsNonVip', [TrangChuController::class, 'getNextSongsNonVip']);
+
     Route::get('getPlaylist', [TrangChuController::class, 'getPlaylist']);
     Route::get('getSonginPlaylist/{id}', [TrangChuController::class, 'getSonginPlaylist']);
     Route::get('getNewSongs', [TrangChuController::class, 'getNewSongs']);

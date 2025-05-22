@@ -5,8 +5,8 @@ type post = {
     trangThai: string,
     anh: File,
     theloai_id: string,
-    ngayTao?: string,
-    ngayCapNhat?: string,
+    ngayTao?: Date,
+    ngayCapNhat?: Date,
 }
 const postPlaylist = async (playList: post) => {
     try {
@@ -51,6 +51,7 @@ const postSuaPlaylist = async (playlist: post, id: number) => {
             formData.append('anh', playlist.anh);
         }
         if (playlist.ngayCapNhat) {
+            // @ts-ignore
             formData.append('ngayCapNhat', playlist.ngayCapNhat);
         }
         const response = await axiosInstance.post(`/auth/postSuaPlaylist/${id}`, formData, {
@@ -64,9 +65,9 @@ const postSuaPlaylist = async (playlist: post, id: number) => {
     }
 }
 
-const getListPlaylist = async (page: number) => {
+const getListPlaylist = async (page: number, per_page: number = 10) => {
     try {
-        const response = await axiosInstance.get(`/auth/getListPlaylist?page=${page}`);
+        const response = await axiosInstance.get(`/auth/getListPlaylist?page=${page}&per_page=${per_page}`);
         return response.data;
     } catch (error: any) {
         throw error.response?.data?.error || 'Đã xảy ra lỗi!';

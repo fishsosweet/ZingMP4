@@ -1,11 +1,4 @@
-// const recentlyPlayed = [
-//     { title: "Ballad Việt Ngày Nay", img: "/path/to/image1.jpg" },
-//     { title: "#zingchart", img: "/path/to/image2.jpg" },
-//     { title: "Old But Gold", img: "/path/to/image3.jpg" },
-//     { title: "Top 100 Nhạc Electronic/Dance", img: "/path/to/image4.jpg" },
-//     { title: "Top 100 Pop Âu Mỹ Hay Nhất", img: "/path/to/image5.jpg" },
-//     { title: "Hit-Maker: Hứa Kim Tuyền", img: "/path/to/image6.jpg" },
-// ];
+
 import { getDSBaiRandom, getDSMoiPhatHanh, getDSPlaylist, getTopSongs, getSongsInPlaylist } from "../../../services/User/TrangChuService.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,7 +13,6 @@ import { useLikedSongs } from "../../../contexts/LikedSongsContext";
 import axiosInstance from "../../../../configs/axios.tsx";
 
 const colors = ['#f87171', '#60a5fa', '#34d399'];
-
 export default function HomeUser() {
     const navigate = useNavigate();
     const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
@@ -51,14 +43,17 @@ export default function HomeUser() {
             }
         } catch (error) {
             console.error('Error refreshing user data:', error);
+            setIsUserVip(false);
         }
     };
 
     useEffect(() => {
-        refreshUserData();
-        // Cập nhật thông tin mỗi 30 giây
-        const interval = setInterval(refreshUserData, 30000);
-        return () => clearInterval(interval);
+        const token = localStorage.getItem('user_token');
+        if (token) {
+            refreshUserData();
+            const interval = setInterval(refreshUserData, 30000);
+            return () => clearInterval(interval);
+        }
     }, []);
 
     useEffect(() => {
@@ -180,11 +175,15 @@ export default function HomeUser() {
         event.stopPropagation();
         const isRestricted = await handleVipRestriction(song);
         if (isRestricted) return;
-        const rect = event.currentTarget.getBoundingClientRect();
-        setContextMenuPosition({
-            x: rect.right,
-            y: rect.top
-        });
+        const x = event.clientX;
+        const y = event.clientY;
+        const menuWidth = 200;
+        const menuHeight = 150;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const adjustedX = x + menuWidth > viewportWidth ? x - menuWidth : x;
+        const adjustedY = y + menuHeight > viewportHeight ? y - menuHeight : y;
+        setContextMenuPosition({ x: adjustedX, y: adjustedY });
         setSelectedSong(song);
         setShowContextMenu(true);
     };

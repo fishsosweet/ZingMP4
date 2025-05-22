@@ -94,25 +94,23 @@ export default function NhacMoi() {
         event.stopPropagation();
         const isRestricted = await handleVipRestriction(song);
         if (isRestricted) return;
-        const rect = event.currentTarget.getBoundingClientRect();
+
+        // Calculate position relative to the viewport
+        const x = event.clientX;
+        const y = event.clientY;
+
+        // Ensure the menu stays within viewport bounds
         const menuWidth = 200;
         const menuHeight = 150;
-        let x = rect.left - menuWidth;
-        let y = rect.top + rect.height / 2 - menuHeight / 2;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-        if (x < 0) {
-            x = rect.right + 10;
-        }
+        // Adjust x position if menu would go off-screen to the right
+        const adjustedX = x + menuWidth > viewportWidth ? x - menuWidth : x;
+        // Adjust y position if menu would go off-screen to the bottom
+        const adjustedY = y + menuHeight > viewportHeight ? y - menuHeight : y;
 
-        if (y < 0) {
-            y = 10;
-        }
-
-        if (y + menuHeight > window.innerHeight) {
-            y = window.innerHeight - menuHeight - 10;
-        }
-
-        setContextMenuPosition({ x, y });
+        setContextMenuPosition({ x: adjustedX, y: adjustedY });
         setSelectedSong(song);
         setShowContextMenu(true);
     };

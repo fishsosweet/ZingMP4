@@ -36,6 +36,9 @@ import DangKy from "./pages/User/DangKy/DangKy.tsx";
 import NangCap from "./pages/User/NangCap/NangCap.tsx";
 import GoiVip from "./pages/User/NangCap/GoiVIP.tsx";
 import PaymentResult from './pages/User/NangCap/KetQuaNangCap.tsx';
+import ThemGoiVip from "./pages/Admin/GoiVip/Them.tsx";
+import SuaGoiVip from "./pages/Admin/GoiVip/Sua.tsx";
+import ListGoiVip from "./pages/Admin/GoiVip/List.tsx";
 
 const router = createBrowserRouter([
     {
@@ -182,6 +185,24 @@ const router = createBrowserRouter([
         path: "/admin/playlists/edit/:id",
         element: <PrivateRoute>
             <SuaPlaylist />
+        </PrivateRoute>
+    },
+    {
+        path: "/admin/add-goi-vip",
+        element: <PrivateRoute>
+            <ThemGoiVip />
+        </PrivateRoute>
+    },
+    {
+        path: "/admin/goi-vip/edit/:id",
+        element: <PrivateRoute>
+            <SuaGoiVip />
+        </PrivateRoute>
+    },
+    {
+        path: "/admin/list-goi-vip",
+        element: <PrivateRoute>
+            <ListGoiVip />
         </PrivateRoute>
     }
 ]);

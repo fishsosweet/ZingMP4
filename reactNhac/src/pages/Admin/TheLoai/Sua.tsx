@@ -1,22 +1,21 @@
-
 import Sidebar from '../SideBar';
-import {SubmitHandler, useForm} from "react-hook-form";
-import {getThongTinTheLoai, postSuaTheLoai} from "../../../services/Admin/TheLoaiService.tsx";
-import {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { getThongTinTheLoai, postSuaTheLoai } from "../../../services/Admin/TheLoaiService.tsx";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 type Inputs = {
     tenTheLoai: string,
     trangThai: boolean,
     ngayCapNhat: Date
 };
 const SuaTheLoai = () => {
-    const [theLoai,setTheLoai] =useState<any>(null);
+    const [theLoai, setTheLoai] = useState<any>(null);
     const [thongBao, setThongBao] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const { register, handleSubmit,reset,setValue, formState: { errors } } = useForm<Inputs>();
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Inputs>();
     const { id } = useParams();
     const suaTheLoai: SubmitHandler<Inputs> = async (data) => {
         try {
-            const res = await postSuaTheLoai(data,parseInt(id!));
+            const res = await postSuaTheLoai(data, parseInt(id!));
             setThongBao({
                 type: res.success ? 'success' : 'error',
                 message: res.message
@@ -26,7 +25,7 @@ const SuaTheLoai = () => {
                 await getTheLoai();
             }
         }
-        catch (error: any){
+        catch (error: any) {
             console.error("Lỗi cập nhật:", error);
             setThongBao({
                 type: 'error',
@@ -36,15 +35,15 @@ const SuaTheLoai = () => {
             });
         }
     }
-    const getTheLoai=async ()=>{
-        try{
+    const getTheLoai = async () => {
+        try {
             const res = await getThongTinTheLoai(parseInt(id!));
             if (res) {
                 setTheLoai(res);
             }
         }
-        catch (error){
-            setThongBao({type: 'error', message: 'Đã có lỗi xảy ra. Vui lòng thử lại sau.'});
+        catch (error) {
+            setThongBao({ type: 'error', message: 'Đã có lỗi xảy ra. Vui lòng thử lại sau.' });
         }
     }
     useEffect(() => {
@@ -65,15 +64,15 @@ const SuaTheLoai = () => {
     }, [thongBao]);
     return (
         <div className="flex">
-            <Sidebar/>
+            <Sidebar />
             <div className="flex-1 p-10">
                 {thongBao && (
                     <div
                         className={`px-4 py-3 rounded relative border
                             ${thongBao.type === 'success'
-                            ? 'bg-green-100 border-green-400 text-green-700'
-                            : 'bg-red-100 border-red-400 text-red-700'
-                        }`}
+                                ? 'bg-green-100 border-green-400 text-green-700'
+                                : 'bg-red-100 border-red-400 text-red-700'
+                            }`}
                         role="alert"
                     >
                         <span className="block sm:inline">{thongBao.message}</span>
@@ -96,24 +95,25 @@ const SuaTheLoai = () => {
 
                             <div className=" block mb-5">
                                 <label className="form-label">Kích Hoạt</label>
-                                <div className="custom-control custom-radio">
-                                    <input
-                                        className="custom-control-input"
-                                        type="radio"
-
-                                        value="1"
-                                        {...register("trangThai", { required: "Chọn trạng thái" })}
-                                    />
-                                    <label htmlFor="active" className="custom-control-label">Có</label>
-                                </div>
-                                <div className="custom-control custom-radio">
-                                    <input
-                                        className="custom-control-input"
-                                        type="radio"
-                                        value="0"
-                                        {...register("trangThai", { required: "Chọn trạng thái" })}
-                                    />
-                                    <label htmlFor="no_active" className="custom-control-label">Không</label>
+                                <div className="flex items-center space-x-4">
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            value="1"
+                                            {...register('trangthai', { required: 'Vui lòng chọn trạng thái' })}
+                                            className="form-radio h-4 w-4 text-blue-600"
+                                        />
+                                        <span className="ml-2">Hoạt động</span>
+                                    </label>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            value="0"
+                                            {...register('trangthai', { required: 'Vui lòng chọn trạng thái' })}
+                                            className="form-radio h-4 w-4 text-blue-600"
+                                        />
+                                        <span className="ml-2">Không hoạt động</span>
+                                    </label>
                                 </div>
                                 {errors.trangThai && <span className="text-red-700 text-base">{errors.trangThai.message}</span>}
                                 <div className="mb-3 relative top-2 block ">

@@ -6,6 +6,8 @@ import MusicPlayer from "./BaiHat.tsx";
 import { useMusic } from "../../contexts/MusicContext";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../configs/axios.tsx";
+import SongContextMenu from "../../components/User/SongContextMenu.tsx";
+
 export default function UserLayout() {
     const [dangnhap, setDangNhap] = useState(false);
     const [showModal, setShowModal] = useState(false);
@@ -70,19 +72,16 @@ export default function UserLayout() {
         const token = localStorage.getItem('user_token');
         const userInfo = localStorage.getItem('user_info');
 
-        if (token) {
-
-            if (!userInfo) {
-                getUser();
-            } else {
-                try {
-                    const parsedUser = JSON.parse(userInfo);
-                    setUser(parsedUser);
-                    setDangNhap(true);
-                } catch (error) {
-                    console.error('Lỗi khi parse user info:', error);
-                    getUser();
-                }
+        if (token && userInfo) {
+            try {
+                const parsedUser = JSON.parse(userInfo);
+                setUser(parsedUser);
+                setDangNhap(true);
+            } catch (error) {
+                console.error('Lỗi khi parse user info:', error);
+                localStorage.removeItem('user_info');
+                setDangNhap(false);
+                setUser(null);
             }
         } else {
             setDangNhap(false);

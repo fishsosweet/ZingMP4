@@ -17,8 +17,30 @@ const getDSPlaylist = async () => {
     }
 }
 const getDSPhat = async (excludeIds: number[] = []) => {
-    return axiosInstance.post("/user/nextSongs", { exclude: excludeIds });
+    try {
+        const token = localStorage.getItem('user_token');
+        const userInfo = localStorage.getItem('user_info');
+        let isVip = false;
+
+        if (token && userInfo) {
+            try {
+                const user = JSON.parse(userInfo);
+                isVip = user.vip === 1;
+            } catch (error) {
+                console.error('Error parsing user info:', error);
+            }
+        }
+        if (token && isVip) {
+            return await axiosInstance.post("/user/nextSongs", {exclude: excludeIds});
+        } else {
+            return await axiosInstance.post("/user/nextSongsNonVip", {exclude: excludeIds});
+        }
+    } catch (error) {
+        console.error('Error fetching next songs:', error);
+        return { error: true };
+    }
 };
+
 
 const getSongsInPlaylist = async (id: number) => {
     return axiosInstance.get(`/user/getSonginPlaylist/${id}`);

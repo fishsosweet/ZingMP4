@@ -13,10 +13,10 @@ const postTheLoai = async (theLoai: post) => {
             trangThai: theLoai.trangThai,
             ngayTao: theLoai.ngayTao
         })
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
 
@@ -26,25 +26,25 @@ const getThongTinTheLoai = async (id: number) => {
         return res.data
     } catch (error: any) {
         const errorMessage = error.response?.data?.error || "Đã có lỗi xảy ra";
-        return {success: false, message: errorMessage};
+        return { success: false, message: errorMessage };
     }
 }
-const postSuaTheLoai = async (theLoai: post,id: number) => {
+const postSuaTheLoai = async (theLoai: post, id: number) => {
     try {
         const response = await axiosInstance.post(`/auth/postSuaTheLoai/${id}`, {
             tenTheLoai: theLoai.tenTheLoai,
             trangThai: theLoai.trangThai,
             ngayCapNhat: theLoai.ngayCapNhat
         })
-        return {success: true, message: response.data.success};
+        return { success: true, message: response.data.success };
     } catch (error: any) {
         throw error.response?.data?.error
     }
 }
 
-const getListTheLoai = async (page: number) => {
+const getListTheLoai = async (page: number, per_page: number = 10) => {
     try {
-        const response = await axiosInstance.get(`/auth/getListTheLoai?page=${page}`);
+        const response = await axiosInstance.get(`/auth/getListTheLoai?page=${page}&per_page=${per_page}`);
         return response.data;
     } catch (error: any) {
         throw error.response?.data?.error || 'Đã xảy ra lỗi!';
@@ -59,4 +59,4 @@ const deleteTheLoai = async (id: number) => {
     }
 };
 
-export {postTheLoai, getListTheLoai,postSuaTheLoai,deleteTheLoai,getThongTinTheLoai};
+export { postTheLoai, getListTheLoai, postSuaTheLoai, deleteTheLoai, getThongTinTheLoai };

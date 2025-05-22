@@ -22,6 +22,8 @@ class TrangChuController extends Controller
         $response = $this->trangChuService->getRandomBaiHat();
         return $response;
     }
+
+
     public function getPlaylist()
     {
         $response = $this->trangChuService->getPlaylist();
@@ -35,7 +37,19 @@ class TrangChuController extends Controller
             ->limit(1)
             ->with(['casi:id,ten_casi'])
             ->get();
+        return response()->json($songs);
+    }
 
+
+    public function getNextSongsNonVip(Request $request)
+    {
+        $exclude = $request->input('exclude', []);
+        $songs = Baihat::whereNotIn('id', $exclude)
+            ->where('vip',0)
+            ->inRandomOrder()
+            ->limit(1)
+            ->with(['casi:id,ten_casi'])
+            ->get();
         return response()->json($songs);
     }
     public function getSonginPlaylist($id)

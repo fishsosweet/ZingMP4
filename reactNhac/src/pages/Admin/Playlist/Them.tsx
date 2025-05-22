@@ -9,7 +9,7 @@ type Inputs = {
     tenPlaylist: string,
     anh: File,
     theloai_id:string,
-    trangThai:boolean,
+    trangThai:string,
     ngayTao: Date,
 };
 const Playlist = () => {

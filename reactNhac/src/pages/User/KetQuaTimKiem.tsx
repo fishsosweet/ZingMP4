@@ -20,7 +20,7 @@ interface Song {
     };
     audio_url: string;
     lyrics: string;
-    vip: boolean;
+    vip: number;
 }
 
 export default function TimKiem() {
@@ -108,25 +108,20 @@ export default function TimKiem() {
         event.stopPropagation();
         const isRestricted = await handleVipRestriction(song);
         if (isRestricted) return;
-        const rect = event.currentTarget.getBoundingClientRect();
+
+        const x = event.clientX;
+        const y = event.clientY;
+
         const menuWidth = 200;
         const menuHeight = 150;
-        let x = rect.left - menuWidth;
-        let y = rect.top + rect.height / 2 - menuHeight / 2;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-        if (x < 0) {
-            x = rect.right + 10;
-        }
+        const adjustedX = x + menuWidth > viewportWidth ? x - menuWidth : x;
 
-        if (y < 0) {
-            y = 10;
-        }
+        const adjustedY = y + menuHeight > viewportHeight ? y - menuHeight : y;
 
-        if (y + menuHeight > window.innerHeight) {
-            y = window.innerHeight - menuHeight - 10;
-        }
-
-        setContextMenuPosition({ x, y });
+        setContextMenuPosition({ x: adjustedX, y: adjustedY });
         setSelectedSong(song);
         setShowContextMenu(true);
     };

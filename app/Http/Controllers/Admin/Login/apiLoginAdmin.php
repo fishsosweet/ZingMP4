@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class apiLoginAdmin extends Controller
 {
@@ -69,6 +70,33 @@ class apiLoginAdmin extends Controller
         } catch (\Exception $e) {
             Log::error('Error in getAdminProfile: ' . $e->getMessage());
             return response()->json(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getThongTin()
+    {
+        try {
+            $totalBaiHat = DB::table('baihat')->count();
+            $totalTaiKhoan = DB::table('users')->count();
+            $totalTaiKhoanVip = DB::table('users')
+                ->where('vip', 1)
+                ->count();
+            $totalDoanhThu = DB::table('user_goi_vip')
+                ->sum('tien');
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'BaiHat' => $totalBaiHat,
+                    'TaiKhoan' => $totalTaiKhoan,
+                    'TaiKhoanVip' => $totalTaiKhoanVip,
+                    'DoanhThu' => $totalDoanhThu
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy thông tin: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

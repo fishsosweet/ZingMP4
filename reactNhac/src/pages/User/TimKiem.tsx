@@ -1,26 +1,7 @@
 import { useState, useEffect } from "react";
-import { FaSearch, FaSignOutAlt, FaPlay, FaCrown } from "react-icons/fa";
+import { FaSearch, FaSignOutAlt } from "react-icons/fa";
 import axiosInstance from "../../../configs/axios.tsx";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useMusic } from "../../contexts/MusicContext";
-
-interface Song {
-    id: number;
-    title: string;
-    anh: string;
-    audio_url: string;
-    lyrics: string;
-    luotthich: string;
-    vip: boolean;
-    casi: {
-        id: number;
-        ten_casi: string;
-        gioitinh: string;
-        mota: string;
-        anh: string;
-    };
-}
-
 export default function HeaderUser() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -31,12 +12,6 @@ export default function HeaderUser() {
     const [dangnhap, setDangNhap] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [isVip, setIsVip] = useState(false);
-    const [isUserVip, setIsUserVip] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [searchResults, setSearchResults] = useState<Song[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
-
     const getUser = async () => {
         try {
             const token = localStorage.getItem('user_token');
@@ -49,17 +24,12 @@ export default function HeaderUser() {
             const res = await axiosInstance.get('/user/getThongTinUser');
 
             if (res.data) {
-                console.log('Full user data from API:', res.data);
-                if (res.data.vip === undefined) {
-                    console.warn('VIP field is missing in API response');
-                }
                 setUser(res.data);
                 setDangNhap(true);
                 localStorage.setItem('user_info', JSON.stringify(res.data));
                 const isUserVip = res.data.vip === 1 || res.data.vip === true;
-                console.log('VIP status:', isUserVip, 'Raw value:', res.data.vip);
                 setIsVip(isUserVip);
-                setIsUserVip(isUserVip);
+
             }
         } catch (error) {
             console.error('Lỗi khi lấy thông tin user:', error);
@@ -80,18 +50,15 @@ export default function HeaderUser() {
             } else {
                 try {
                     const parsedUser = JSON.parse(userInfo);
-                    console.log('Full user data from localStorage:', parsedUser);
                     if (parsedUser.vip === undefined) {
-                        console.warn('VIP field is missing in localStorage data');
                         getUser();
                         return;
                     }
                     setUser(parsedUser);
                     setDangNhap(true);
                     const isUserVip = parsedUser.vip === 1 || parsedUser.vip === true;
-                    console.log('VIP status from localStorage:', isUserVip, 'Raw value:', parsedUser.vip);
                     setIsVip(isUserVip);
-                    setIsUserVip(isUserVip);
+
                 } catch (error) {
                     console.error('Lỗi khi parse user info:', error);
                     getUser();
@@ -150,15 +117,11 @@ export default function HeaderUser() {
     const refreshUserData = async () => {
         try {
             const token = localStorage.getItem('user_token');
-            if (!token) {
-                setIsUserVip(false);
-                return;
-            }
+
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             const res = await axiosInstance.get('/user/getThongTinUser');
             if (res.data) {
                 localStorage.setItem('user_info', JSON.stringify(res.data));
-                setIsUserVip(Boolean(res.data.vip));
             }
         } catch (error) {
             console.error('Error refreshing user data:', error);
@@ -170,42 +133,6 @@ export default function HeaderUser() {
         const interval = setInterval(refreshUserData, 30000);
         return () => clearInterval(interval);
     }, []);
-
-    const handleVipRestriction = async (song: any) => {
-        if (song.vip === 1) {
-            await refreshUserData();
-            if (!isUserVip) {
-                navigate('/zingmp4/nang-cap');
-                return true;
-            }
-        }
-        return false;
-    };
-
-    const handleSearchResults = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchTerm.trim()) return;
-
-        setIsLoading(true);
-        try {
-            const response = await axiosInstance.get(`/user/timKiem?q=${encodeURIComponent(searchTerm)}`);
-            setSearchResults(response.data);
-        } catch (error) {
-            console.error("Lỗi khi tìm kiếm:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handlePlaySong = async (song: Song) => {
-        const isRestricted = await handleVipRestriction(song);
-        if (isRestricted) return;
-
-        setPlaylist(searchResults);
-        setCurrentSong(song);
-        setIsPlaying(true);
-    };
-
     return (
         <div className="relative flex items-center justify-between px-4 py-2 bg-[#1a152b] h-[65px] backdrop-blur-md">
             <div className="flex-1 mx-4 relative">

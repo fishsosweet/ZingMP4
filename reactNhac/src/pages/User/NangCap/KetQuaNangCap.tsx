@@ -16,7 +16,6 @@ export default function PaymentResult() {
             setStatus(statusParam as 'success' | 'error' | 'info');
             setMessage(messageParam);
         } else {
-            // Nếu không có tham số, thử xác minh thanh toán
             const vnp_ResponseCode = searchParams.get('vnp_ResponseCode');
             const vnp_TransactionNo = searchParams.get('vnp_TransactionNo');
 
@@ -41,7 +40,7 @@ export default function PaymentResult() {
             if (response.data.success) {
                 setStatus('success');
                 setMessage('Thanh toán thành công! Tài khoản của bạn đã được nâng cấp.');
-                // Cập nhật thông tin user trong localStorage
+
                 localStorage.setItem('user_info', JSON.stringify(response.data.user));
             } else {
                 setStatus('error');
@@ -55,7 +54,6 @@ export default function PaymentResult() {
 
     useEffect(() => {
         if (status !== 'loading') {
-            // Chuyển hướng sau 3 giây
             const timer = setTimeout(() => {
                 navigate('/zingmp4');
                 window.location.reload();
@@ -95,4 +93,4 @@ export default function PaymentResult() {
             </div>
         </div>
     );
-} 
+}

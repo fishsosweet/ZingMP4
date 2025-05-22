@@ -13,6 +13,7 @@ const ListPlaylist = () => {
     const [list, setList] = useState<any[]>([]);
     const [pageCount, setPageCount] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [perPage, setPerPage] = useState<number>(10);
     const [expandedPlaylistId, setExpandedPlaylistId] = useState<number | null>(null);
     const [songsMap, setSongsMap] = useState<Record<number, any[]>>({});
     const handleToggleSongs = async (playlistId: number) => {
@@ -32,7 +33,7 @@ const ListPlaylist = () => {
     };
 
     const getData = async (page: number) => {
-        const res = await getListPlaylist(page);
+        const res = await getListPlaylist(page, perPage);
         if (res && Array.isArray(res.data)) {
             setList(res.data);
             setPageCount(res.last_page);
@@ -51,7 +52,7 @@ const ListPlaylist = () => {
                 const newPage = currentPage - 1;
                 setCurrentPage(newPage);
             } else {
-                if(list.length===1)
+                if (list.length === 1)
                     window.location.reload();
                 else
                     setCurrentPage(currentPage);
@@ -65,19 +66,23 @@ const ListPlaylist = () => {
 
     useEffect(() => {
         getData(currentPage);
-    }, [currentPage]);
+    }, [currentPage, perPage]);
 
     const handlePageClick = (data: any) => {
         setCurrentPage(data.selected + 1);
     };
 
+    const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setPerPage(Number(e.target.value));
+        setCurrentPage(1); // Reset về trang 1 khi thay đổi số lượng hiển thị
+    };
 
     const handleRemoveSongFromPlaylist = async (playlistId: number, songId: number) => {
         const confirmDelete = confirm("Bạn có chắc muốn xóa bài hát này khỏi playlist?");
         if (!confirmDelete) return;
 
         try {
-            await deleteBaiHatOfPlaylist(playlistId,songId);
+            await deleteBaiHatOfPlaylist(playlistId, songId);
             alert("Đã xóa bài hát khỏi playlist thành công");
             setSongsMap((prev) => ({
                 ...prev,
@@ -91,23 +96,52 @@ const ListPlaylist = () => {
 
     return (
         <div className="flex">
-            <Sidebar/>
-            <div className="flex-1 p-10 ">
+            <Sidebar />
+            <div className="flex-1 p-10">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold">Danh Sách Playlist</h1>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="perPage" className="text-sm font-medium text-gray-700">
+                                Hiển thị:
+                            </label>
+                            <select
+                                id="perPage"
+                                value={perPage}
+                                onChange={handlePerPageChange}
+                                className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                            >
+                                <option value="1">1</option>
+                                <option value="5">5</option>
+                                <option value="8">8</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <Link
+                            to="/admin/add-playlists"
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Thêm Playlist Mới
+                        </Link>
+                    </div>
+                </div>
                 <table className="text-black w-full text-center border border-black border-collapse table-auto ">
                     <thead>
-                    <tr className="bg-blue-300 border border-black">
-                        <th className="w-[50px] border border-black">ID</th>
-                        <th className="border border-black p-2">Người dùng</th>
-                        <th className="border border-black">Tên playlist</th>
-                        <th className="border border-black">Ảnh</th>
-                        <th className="border border-black">Trạng thái</th>
-                        <th className="border border-black">Cập nhật</th>
-                        <th className="border border-black"></th>
-                    </tr>
+                        <tr className="bg-blue-300 border border-black">
+                            <th className="w-[50px] border border-black">ID</th>
+                            <th className="border border-black p-2">Người dùng</th>
+                            <th className="border border-black">Tên playlist</th>
+                            <th className="border border-black">Ảnh</th>
+                            <th className="border border-black">Trạng thái</th>
+                            <th className="border border-black">Cập nhật</th>
+                            <th className="border border-black"></th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {Array.isArray(list) && list.length > 0 ? (
-                        list.map((item) => (
+                        {Array.isArray(list) && list.length > 0 ? (
+                            list.map((item) => (
                                 <React.Fragment key={item.id}>
                                     <tr className="cursor-pointer hover:bg-gray-100"
                                         onClick={() => handleToggleSongs(item.id)}>
@@ -137,10 +171,10 @@ const ListPlaylist = () => {
                                                 Sửa
                                             </Link>
                                             <button className="bg-red-500 px-2 py-1 text-white rounded cursor-pointer"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDelete(item.id);
-                                                    }}>
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(item.id);
+                                                }}>
                                                 Xóa
                                             </button>
                                         </td>
@@ -158,30 +192,30 @@ const ListPlaylist = () => {
                                                     {songsMap[item.id] && songsMap[item.id].length > 0 ? (
                                                         <table className="w-full text-left border-collapse">
                                                             <thead>
-                                                            <tr className="bg-gray-100 text-gray-700">
-                                                                <th className="px-4 py-2 border">ID</th>
-                                                                <th className="px-4 py-2 border">Tên bài hát</th>
-                                                                <th className="px-4 py-2 border">Hành động</th>
-                                                            </tr>
+                                                                <tr className="bg-gray-100 text-gray-700">
+                                                                    <th className="px-4 py-2 border">ID</th>
+                                                                    <th className="px-4 py-2 border">Tên bài hát</th>
+                                                                    <th className="px-4 py-2 border">Hành động</th>
+                                                                </tr>
                                                             </thead>
                                                             <tbody>
-                                                            {songsMap[item.id].map((song, idx) => (
-                                                                <tr key={song.id} className="hover:bg-gray-50">
-                                                                    <td className="px-4 py-2 border">{idx + 1}</td>
-                                                                    <td className="px-4 py-2 border">{song.title}</td>
-                                                                    <td className="px-4 py-2 border w-[120px]">
-                                                                        <button
-                                                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleRemoveSongFromPlaylist(item.id, song.id);
-                                                                            }}
-                                                                        >
-                                                                            Xóa
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                            ))}
+                                                                {songsMap[item.id].map((song, idx) => (
+                                                                    <tr key={song.id} className="hover:bg-gray-50">
+                                                                        <td className="px-4 py-2 border">{idx + 1}</td>
+                                                                        <td className="px-4 py-2 border">{song.title}</td>
+                                                                        <td className="px-4 py-2 border w-[120px]">
+                                                                            <button
+                                                                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleRemoveSongFromPlaylist(item.id, song.id);
+                                                                                }}
+                                                                            >
+                                                                                Xóa
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
                                                             </tbody>
                                                         </table>
                                                     ) : (
@@ -193,15 +227,15 @@ const ListPlaylist = () => {
                                         </tr>
                                     )}
                                 </React.Fragment>
-                        ))
+                            ))
 
-                    ) : (
-                        <tr>
-                            <td colSpan={6} className="bg-red-100 border border-red-400 text-red-700 text-center">
-                                {list.length === 0 ? "Không có dữ liệu" : list}
-                            </td>
-                        </tr>
-                    )}
+                        ) : (
+                            <tr>
+                                <td colSpan={6} className="bg-red-100 border border-red-400 text-red-700 text-center">
+                                    {list.length === 0 ? "Không có dữ liệu" : list}
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
 

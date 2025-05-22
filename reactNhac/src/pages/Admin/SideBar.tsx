@@ -1,5 +1,5 @@
 import {  useState } from 'react';
-import { FaHome, FaStar, FaUsers, FaSignOutAlt, FaMusic, FaMicrophone } from 'react-icons/fa';
+import { FaHome, FaStar, FaSignOutAlt, FaMusic, FaMicrophone } from 'react-icons/fa';
 import { MdOutlineWorkspacePremium, MdQueueMusic } from 'react-icons/md';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,6 @@ const SideBar = () => {
     const [isCategoriesOpen, setCategoriesOpen] = useState(false);
     const [isSliderOpen, setSliderOpen] = useState(false);
     const [isSingerOpen, setSingerOpen] = useState(false);
-    const [isUsersOpen, setUsersOpen] = useState(false);
     const [isPlaylistOpen, setPlaylistOpen] = useState(false);
     const [isVipOpen, setVipOpen] = useState(false);
     const navigate = useNavigate();
@@ -41,7 +40,7 @@ const SideBar = () => {
         setCategoriesOpen(false);
         setSingerOpen(false);
         setSliderOpen(false);
-        setUsersOpen(false);
+
         setVipOpen(false);
         setPlaylistOpen(false);
     };
@@ -167,27 +166,6 @@ const SideBar = () => {
                 <li>
                     <button
                         onClick={() => {
-                            const next = !isUsersOpen;
-                            closeAll();
-                            setUsersOpen(next);
-                        }}
-                        className="w-full flex items-center space-x-2 p-3 hover:bg-gray-700 rounded"
-                    >
-                        <FaUsers />
-                        <span>Quản lý người dùng</span>
-                    </button>
-                    {isUsersOpen && (
-                        <div className="bg-gray-700 bg-opacity-50 rounded-lg mt-1 pl-4 py-2">
-                            <ul className="space-y-1 pr-3">
-                                <li><a href="#" className="block p-2 hover:bg-gray-600 rounded">Danh sách accounts</a>
-                                </li>
-                            </ul>
-                        </div>
-                    )}
-                </li>
-                <li>
-                    <button
-                        onClick={() => {
                             const next = !isVipOpen;
                             closeAll();
                             setVipOpen(next);
@@ -200,9 +178,10 @@ const SideBar = () => {
                     {isVipOpen && (
                         <div className="bg-gray-700 bg-opacity-50 rounded-lg mt-1 pl-4 py-2">
                             <ul className="space-y-1 pr-3">
-                                <li><a href="#" className="block p-2 hover:bg-gray-600 rounded">Danh sách gói VIP</a>
+                                <li><Link to="/admin/add-goi-vip" className="block p-2 hover:bg-gray-600 rounded">Thêm gói VIP</Link></li>
+                                <li><Link to="/admin/list-goi-vip" className="block p-2 hover:bg-gray-600 rounded">Danh sách gói VIP</Link>
                                 </li>
-                                <li><a href="#" className="block p-2 hover:bg-gray-600 rounded">Thêm gói VIP</a></li>
+
                             </ul>
                         </div>
                     )}
