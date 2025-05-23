@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { PrivateRoute, PrivateRouteUser } from '../src/services/PrivateRoute.tsx';
+import { PrivateRoute, PrivateRouteUser } from './services/PrivateRoute.tsx';
 import TheLoai from '../src/pages/Admin/TheLoai/Them.tsx'
 import CaSi from '../src/pages/Admin/CaSi/Them.tsx'
 import BaiHat from "./pages/Admin/Nhac/Them.tsx";

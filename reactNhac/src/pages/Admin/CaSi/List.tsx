@@ -11,6 +11,7 @@ const ListCaSi = () => {
     const [pageCount, setPageCount] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [perPage, setPerPage] = useState<number>(10);
+    const [searchTerm, setSearchTerm] = useState<string>("");
 
     const getData = async (page: number) => {
         const res = await getListCaSi(page, perPage);
@@ -57,7 +58,10 @@ const ListCaSi = () => {
         setCurrentPage(1);
     };
 
-    // @ts-ignore
+    const filteredList = list.filter(item =>
+        item.ten_casi.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="flex">
             <Sidebar />
@@ -65,6 +69,15 @@ const ListCaSi = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Danh Sách Ca Sĩ</h1>
                     <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm theo tên ca sĩ..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-[300px]"
+                            />
+                        </div>
                         <div className="flex items-center gap-2">
                             <label htmlFor="perPage" className="text-sm font-medium text-gray-700">
                                 Hiển thị:
@@ -91,40 +104,30 @@ const ListCaSi = () => {
                         </Link>
                     </div>
                 </div>
-                <table className="text-black w-full text-center border border-black border-collapse table-auto ">
+
+                <table className="text-black w-full text-center border border-black border-collapse">
                     <thead>
                         <tr className="bg-blue-300 border border-black">
                             <th className="w-[50px] border border-black">ID</th>
                             <th className="border border-black">Tên ca sĩ</th>
-                            <th className="border border-black">Giới tính</th>
-                            <th className="border border-black">Mô tả</th>
                             <th className="border border-black">Ảnh</th>
+
                             <th className="border border-black">Cập nhật</th>
                             <th className="border border-black">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.isArray(list) && list.length > 0 ? (
-                            list.map((item) => (
+                        {Array.isArray(filteredList) && filteredList.length > 0 ? (
+                            filteredList.map((item) => (
                                 <tr key={item.id}>
                                     <td className="w-[50px] bg-white text-black border border-black">{item.id}</td>
                                     <td className="bg-white text-black border border-black">{item.ten_casi}</td>
-                                    <td className="bg-white text-black border border-black">
-                                        {item.gioitinh}
-                                    </td>
-                                    <td className="bg-white text-black border border-black">
-                                        {item.mota}
-                                    </td>
                                     <td className="bg-white text-black border border-black p-2">
                                         <div className="flex justify-center items-center h-[60px] w-full">
-                                            <img
-                                                src={`http://127.0.0.1:8000/${item.anh}`}
-                                                className="w-[60px] h-[60px]"
-                                                alt="Poster"
-                                            />
+                                            <img src={`http://127.0.0.1:8000/${item.anh}`} className="w-[60px] h-[60px]" alt="Poster" />
                                         </div>
                                     </td>
-
+                                
                                     <td className="bg-white text-black border border-black">
                                         {dayjs(item.updated_at).format('DD/MM/YYYY')}
                                     </td>
@@ -135,20 +138,19 @@ const ListCaSi = () => {
                                         >
                                             Sửa
                                         </Link>
-                                        <button className="bg-red-500 px-2 py-1 text-white rounded cursor-pointer"
+                                        <button
+                                            className="bg-red-500 px-2 py-1 text-white rounded m-1 cursor-pointer"
                                             onClick={() => handleDelete(item.id)}
                                         >
                                             Xóa
                                         </button>
                                     </td>
-
-
                                 </tr>
                             ))
                         ) : (
                             <tr>
                                 <td colSpan={6} className="bg-red-100 border border-red-400 text-red-700 text-center">
-                                    {list.length === 0 ? "Không có dữ liệu" : list}
+                                    Không có dữ liệu
                                 </td>
                             </tr>
                         )}
@@ -161,14 +163,12 @@ const ListCaSi = () => {
                     pageCount={pageCount}
                     onPageChange={handlePageClick}
                     containerClassName="flex justify-center items-center space-x-2 mt-4"
-                    activeClassName="bg-blue-500 text-white border border-blue-500 w-[42px] h-10 flex items-center justify-center rounded-md" // Đảm bảo trang active có diện tích và căn giữa
+                    activeClassName="bg-blue-500 text-white border border-blue-500 w-[42px] h-10 flex items-center justify-center rounded-md"
                     pageClassName="page-item"
                     pageLinkClassName="page-link px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all"
                     previousClassName="prev-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     nextClassName="next-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-
-
             </div>
         </div>
     );

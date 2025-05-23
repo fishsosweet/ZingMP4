@@ -19,6 +19,7 @@ const ListGoiVip = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [perPage, setPerPage] = useState<number>(10);
     const [thongBao, setThongBao] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>("");
 
     const getData = async (page: number) => {
         try {
@@ -84,6 +85,11 @@ const ListGoiVip = () => {
         }).format(amount);
     };
 
+    const filteredList = list.filter(item =>
+        formatCurrency(item.gia).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.thoi_han.toString().includes(searchTerm)
+    );
+
     return (
         <div className="flex">
             <Sidebar />
@@ -91,6 +97,15 @@ const ListGoiVip = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Danh Sách Gói VIP</h1>
                     <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm theo giá hoặc thời hạn..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-[300px]"
+                            />
+                        </div>
                         <div className="flex items-center gap-2">
                             <label htmlFor="perPage" className="text-sm font-medium text-gray-700">
                                 Hiển thị:
@@ -143,8 +158,8 @@ const ListGoiVip = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.isArray(list) && list.length > 0 ? (
-                            list.map((item) => (
+                        {Array.isArray(filteredList) && filteredList.length > 0 ? (
+                            filteredList.map((item) => (
                                 <tr key={item.id}>
                                     <td className="w-[50px] bg-white text-black border border-black">{item.id}</td>
                                     <td className="bg-white text-black border border-black">{formatCurrency(item.gia)}</td>

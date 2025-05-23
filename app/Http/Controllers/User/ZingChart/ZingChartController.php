@@ -14,6 +14,7 @@ class ZingChartController extends Controller
     public function zingChart() {
         try {
             $top10 = BaiHat::with('casi')->orderBy('luotxem', 'desc')
+                ->where('trangthai', 1)
                 ->limit(10)
                 ->get();
             return response()->json($top10,200);

@@ -29,6 +29,10 @@ interface BaiHat {
     updated_at: string;
 }
 
+interface Inputs {
+    trangthai: number;
+}
+
 const ListBaiHat = () => {
     const [list, setList] = useState<BaiHat[]>([]);
     const [pageCount, setPageCount] = useState<number>(0);
@@ -38,6 +42,7 @@ const ListBaiHat = () => {
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
     const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
     const [thongBao, setThongBao] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>("");
     const { watch, setValue } = useForm<Inputs>();
     const trangthai = watch('trangthai');
 
@@ -68,19 +73,19 @@ const ListBaiHat = () => {
 
     const getData = async (page: number) => {
         try {
-            const res = await getListBaiHat(page, perPage);
-            if (res && Array.isArray(res.data)) {
-                setList(res.data);
-                setPageCount(res.last_page);
-                setValue('trangthai', Number(res.data[0].trangthai));
-            } else {
-                setList([]);
+            const response = await getListBaiHat(page, perPage);
+            if (response) {
+                setList(response.data);
+                setPageCount(response.last_page);
             }
-        } catch (error) {
-            setThongBao({ type: 'error', message: 'Không thể lấy danh sách bài hát' });
+        } catch (error: any) {
+            setThongBao({
+                type: 'error',
+                message: error.message || 'Không thể lấy danh sách bài hát'
+            });
             setList([]);
         }
-    }
+    };
 
     const handleDelete = async (id: number) => {
         const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa bài hát này?");
@@ -98,7 +103,7 @@ const ListBaiHat = () => {
         } catch (error: any) {
             setThongBao({
                 type: 'error',
-                message: `Xóa thất bại! ${error.message || "Lỗi không xác định"}`
+                message: error.message || 'Xóa thất bại! Lỗi không xác định'
             });
         }
     };
@@ -123,6 +128,12 @@ const ListBaiHat = () => {
         }
     }, [thongBao]);
 
+    const filteredList = list.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.casi.ten_casi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.theloai.ten_theloai.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="flex">
             <Sidebar />
@@ -130,6 +141,15 @@ const ListBaiHat = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Danh Sách Bài Hát</h1>
                     <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm theo tên bài hát, ca sĩ hoặc thể loại..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-[300px]"
+                            />
+                        </div>
                         <div className="flex items-center gap-2">
                             <label htmlFor="perPage" className="text-sm font-medium text-gray-700">
                                 Hiển thị:
@@ -177,7 +197,7 @@ const ListBaiHat = () => {
                             <th className="border border-black">Tên bài hát</th>
                             <th className="border border-black">Ca sĩ</th>
                             <th className="border border-black">Thể loại</th>
-                            <th className="border border-black">Bài hát</th>
+                            <th className="border border-black">Audio</th>
                             <th className="border border-black">Ảnh</th>
                             <th className="border border-black">Thời lượng</th>
                             <th className="border border-black">VIP</th>
@@ -187,8 +207,8 @@ const ListBaiHat = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.isArray(list) && list.length > 0 ? (
-                            list.map((item) => (
+                        {Array.isArray(filteredList) && filteredList.length > 0 ? (
+                            filteredList.map((item) => (
                                 <tr key={item.id}>
                                     <td className="w-[50px] bg-white text-black border border-black">{item.id}</td>
                                     <td className="bg-white text-black border border-black">{item.title}</td>
@@ -213,7 +233,7 @@ const ListBaiHat = () => {
                                     <td className="bg-white text-black border border-black">
                                         {item.thoiluong} phút
                                     </td>
-                                    <td className="bg-white text-black text-center border border-black p-5">
+                                    <td className="bg-white text-black text-center border border-black">
                                         {item.vip === 1 ? (
                                             <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">YES</span>
                                         ) : (
@@ -227,7 +247,7 @@ const ListBaiHat = () => {
                                             <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">NO</span>
                                         )}
                                     </td>
-                                    <td className="bg-white text-black border border-black p-2">
+                                    <td className="bg-white text-black border border-black">
                                         {dayjs(item.updated_at).format('DD/MM/YYYY')}
                                     </td>
                                     <td className="p-2 border border-black">

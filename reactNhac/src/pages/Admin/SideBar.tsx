@@ -3,7 +3,7 @@ import { FaHome, FaStar, FaSignOutAlt, FaMusic, FaMicrophone } from 'react-icons
 import { MdOutlineWorkspacePremium, MdQueueMusic } from 'react-icons/md';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../../services/AuthServices'
+import { logoutAdmin} from '../../services/AuthServices'
 // import axiosInstance from "../../../configs/axios.tsx";
 //
 // interface AdminProfile {
@@ -33,7 +33,7 @@ const SideBar = () => {
     // }, []);
 
     const logOut = () => {
-        logout();
+        logoutAdmin();
         navigate('/login-admin');
     }
     const closeAll = () => {

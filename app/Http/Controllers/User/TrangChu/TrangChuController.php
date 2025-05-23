@@ -33,6 +33,7 @@ class TrangChuController extends Controller
     {
         $exclude = $request->input('exclude', []);
         $songs = Baihat::whereNotIn('id', $exclude)
+            ->where('trangthai', 1)
             ->inRandomOrder()
             ->limit(1)
             ->with(['casi:id,ten_casi'])
@@ -45,6 +46,7 @@ class TrangChuController extends Controller
     {
         $exclude = $request->input('exclude', []);
         $songs = Baihat::whereNotIn('id', $exclude)
+            ->where('trangthai', 1)
             ->where('vip',0)
             ->inRandomOrder()
             ->limit(1)
@@ -66,6 +68,7 @@ class TrangChuController extends Controller
     {
         try {
             $songs = BaiHat::with(['casi:id,ten_casi'])
+                ->where('trangthai', 1)
                 ->orderBy('created_at', 'desc')
                 ->limit(12)
                 ->get();
@@ -87,6 +90,7 @@ class TrangChuController extends Controller
     public function getTopBaiHat()
     {
         $topSongs = BaiHat::with(['casi:id,ten_casi'])
+            ->where('trangthai', 1)
             ->orderByDesc('luotxem')
             ->take(3)
             ->get();
@@ -120,7 +124,7 @@ class TrangChuController extends Controller
     public function search1($query)
     {
         $results = BaiHat::with(['casi:id,ten_casi'])
-            ->where('title', 'LIKE', "%{$query}%")
+            ->where('title', 'LIKE', "%{$query}%")->where('trangthai', 1)
             ->orWhereHas('casi', function ($q) use ($query) {
                 $q->where('ten_casi', 'LIKE', "%{$query}%");
             })
@@ -158,6 +162,7 @@ class TrangChuController extends Controller
         }
 
         $songsByArtist = Baihat::where('casi_id', $currentSong->casi_id)
+            ->where('trangthai', 1)
             ->where('id', '!=', $id)
             ->with(['casi:id,ten_casi', 'theloai'])
             ->limit(5)
@@ -165,6 +170,7 @@ class TrangChuController extends Controller
 
         if ($songsByArtist->isEmpty()) {
             $songsByGenre = Baihat::where('theloai_id', $currentSong->theloai_id)
+                ->where('trangthai', 1)
                 ->where('id', '!=', $id)
                 ->with(['casi:id,ten_casi', 'theloai'])
                 ->limit(5)
