@@ -78,7 +78,8 @@ Route::prefix('user')->group(function () {
     Route::post('registerUser', [ThongTinUser::class, 'register']);
     Route::post('check-email', [ThongTinUser::class, 'checkEmail']);
     Route::get('/vipprocess-get', [VipController::class, 'processVipPayment'])->name('vipprocess-get');
-
+    Route::post('/send-otp', [App\Http\Controllers\User\OtpController::class, 'sendOtp']);
+    Route::post('/verify-otp', [App\Http\Controllers\User\OtpController::class, 'verifyOtp']);
     Route::middleware(['jwt.auth'])->group(function () {
         Route::get('/getThongTinUser', [apiLoginUser::class, 'getUserProfile']);
         Route::post('/playlist/create', [ThongTinUser::class, 'postPlayList']);
@@ -116,3 +117,5 @@ Route::prefix('user')->group(function () {
     Route::get('/get10NewSongs', [BaiMoiController::class, 'baiMoi']);
     Route::get('/getTop10', [ZingChartController::class, 'zingChart']);
 });
+
+// OTP Routes

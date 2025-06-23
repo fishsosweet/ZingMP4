@@ -22,14 +22,12 @@ export default function HeaderUser() {
             }
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             const res = await axiosInstance.get('/user/getThongTinUser');
-
             if (res.data) {
                 setUser(res.data);
                 setDangNhap(true);
                 localStorage.setItem('user_info', JSON.stringify(res.data));
                 const isUserVip = res.data.vip === 1 || res.data.vip === true;
                 setIsVip(isUserVip);
-
             }
         } catch (error) {
             console.error('Lỗi khi lấy thông tin user:', error);

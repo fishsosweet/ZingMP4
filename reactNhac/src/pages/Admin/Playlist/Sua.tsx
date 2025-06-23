@@ -192,7 +192,7 @@ const SuaPlaylist = () => {
                                             {...register("trangThai", { required: "Vui lòng chọn trạng thái" })}
                                             className="form-radio"
                                         />
-                                        <span className="ml-2">Kích hoạt</span>
+                                        <span className="ml-2">Có</span>
                                     </label>
                                     <label className="inline-flex items-center">
                                         <input
@@ -201,7 +201,7 @@ const SuaPlaylist = () => {
                                             {...register("trangThai", { required: "Vui lòng chọn trạng thái" })}
                                             className="form-radio"
                                         />
-                                        <span className="ml-2">Không kích hoạt</span>
+                                        <span className="ml-2">Không</span>
                                     </label>
                                 </div>
                                 {errors.trangThai && (

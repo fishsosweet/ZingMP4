@@ -93,40 +93,41 @@ const SuaTheLoai = () => {
                                 {errors.tenTheLoai && <span className="text-red-700 text-base">{errors.tenTheLoai.message}</span>}
                             </div>
 
-                            <div className=" block mb-5">
-                                <label className="form-label">Kích Hoạt</label>
-                                <div className="flex items-center space-x-4">
-                                    <label className="inline-flex items-center">
+                            <div className="block mb-5">
+                                <label className="form-label">Trạng Thái</label>
+                                <div className="flex items-center gap-4">
+                                    <label className="inline-flex items-center gap-2">
                                         <input
                                             type="radio"
                                             value="1"
-                                            {...register('trangthai', { required: 'Vui lòng chọn trạng thái' })}
-                                            className="form-radio h-4 w-4 text-blue-600"
+                                            {...register("trangThai", { required: "Chọn trạng thái" })}
+                                            className="text-blue-600"
                                         />
-                                        <span className="ml-2">Hoạt động</span>
+                                        <span>Có</span>
                                     </label>
-                                    <label className="inline-flex items-center">
+                                    <label className="inline-flex items-center gap-2">
                                         <input
                                             type="radio"
                                             value="0"
-                                            {...register('trangthai', { required: 'Vui lòng chọn trạng thái' })}
-                                            className="form-radio h-4 w-4 text-blue-600"
+                                            {...register("trangThai", { required: "Chọn trạng thái" })}
+                                            className="text-blue-600"
                                         />
-                                        <span className="ml-2">Không hoạt động</span>
+                                        <span>Không</span>
                                     </label>
                                 </div>
                                 {errors.trangThai && <span className="text-red-700 text-base">{errors.trangThai.message}</span>}
-                                <div className="mb-3 relative top-2 block ">
-                                    <label htmlFor="created_at" className="form-label block">Ngày cập nhật</label>
-                                    <input
-                                        type="datetime-local"
-                                        className="form-control w-2/5 px-4 py-2 border rounded-md block "
-                                        id="created_at"
-                                        {...register("ngayCapNhat", { required: "Vui lòng chọn ngày " })}
-                                    />
-                                </div>
-                                {errors.ngayCapNhat && <span className="text-red-700 text-base m-0">{errors.ngayCapNhat.message}</span>}
                             </div>
+
+                            <div className="mb-3 relative top-2 block ">
+                                <label htmlFor="created_at" className="form-label block">Ngày cập nhật</label>
+                                <input
+                                    type="datetime-local"
+                                    className="form-control w-2/5 px-4 py-2 border rounded-md block "
+                                    id="created_at"
+                                    {...register("ngayCapNhat", { required: "Vui lòng chọn ngày " })}
+                                />
+                            </div>
+                            {errors.ngayCapNhat && <span className="text-red-700 text-base m-0">{errors.ngayCapNhat.message}</span>}
                         </div>
 
                     </div>

@@ -7,15 +7,14 @@ import { useParams } from "react-router-dom";
 type Inputs = {
     gia: number;
     thoi_han: number;
-    trangthai: number;
+    trang_thai: number;
     ngayCapNhat: Date;
 };
 
 const SuaGoiVip = () => {
     const [thongBao, setThongBao] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<Inputs>();
+    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Inputs>();
     const { id } = useParams();
-    const trangthai = watch('trangthai');
 
     const suaGoiVip: SubmitHandler<Inputs> = async (data) => {
         try {
@@ -45,7 +44,7 @@ const SuaGoiVip = () => {
             if (res) {
                 setValue('gia', res.gia);
                 setValue('thoi_han', res.thoi_han);
-                setValue('trangthai', Number(res.trangthai));
+                setValue('trang_thai', res.trangthai.toString());
                 setValue('ngayCapNhat', new Date());
             }
         } catch (error) {
@@ -118,25 +117,23 @@ const SuaGoiVip = () => {
                                     <label className="inline-flex items-center gap-2">
                                         <input
                                             type="radio"
-                                            value={1}
-                                            checked={trangthai === 1}
-                                            {...register("trangthai", { required: "Chọn trạng thái" })}
+                                            value="1"
+                                            {...register("trang_thai", { required: "Chọn trạng thái" })}
                                             className="text-blue-600"
                                         />
-                                        <span>Hoạt động</span>
+                                        <span>Có</span>
                                     </label>
                                     <label className="inline-flex items-center gap-2">
                                         <input
                                             type="radio"
-                                            value={0}
-                                            checked={trangthai === 0}
-                                            {...register("trangthai", { required: "Chọn trạng thái" })}
+                                            value="0"
+                                            {...register("trang_thai", { required: "Chọn trạng thái" })}
                                             className="text-blue-600"
                                         />
-                                        <span>Không hoạt động</span>
+                                        <span>Không</span>
                                     </label>
                                 </div>
-                                {errors.trangthai && <span className="text-red-700 text-base">{errors.trangthai.message}</span>}
+                                {errors.trang_thai && <span className="text-red-700 text-base">{errors.trang_thai.message}</span>}
                             </div>
 
                             <div className="mb-3 relative top-2 block">

@@ -14,6 +14,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\Cors::class,
     ];
 
     protected $middlewareGroups = [
@@ -28,7 +29,7 @@ class Kernel extends HttpKernel
 
         'api' => [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -46,7 +47,7 @@ class Kernel extends HttpKernel
 
         // Thêm middleware JWT
         'jwt.auth'   => \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
-        'jwt.refresh'=> \Tymon\JWTAuth\Http\Middleware\RefreshToken::class,
+        'jwt.refresh' => \Tymon\JWTAuth\Http\Middleware\RefreshToken::class,
         'user' => \App\Http\Middleware\JWTUserMiddleware::class,
         'level' => \App\Http\Middleware\CheckRole::class,
     ];

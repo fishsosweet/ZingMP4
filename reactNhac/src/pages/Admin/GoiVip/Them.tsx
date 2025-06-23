@@ -17,7 +17,7 @@ const ThemGoiVip = () => {
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Inputs>();
 
     useEffect(() => {
-        // Set default value for ngayTao when component mounts
+
         setValue('ngayTao', new Date());
     }, []);
 

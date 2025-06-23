@@ -3,7 +3,7 @@ import axiosInstance from "../../../configs/axios.tsx";
 type post = {
     gia: number,
     thoi_han: number,
-    trangthai: number,
+    trang_thai: number,
     ngayTao?: Date,
     ngayCapNhat?: Date,
 }
@@ -13,7 +13,7 @@ const postGoiVip = async (goiVip: post) => {
         const response = await axiosInstance.post('/auth/postGoiVip', {
             gia: goiVip.gia,
             thoi_han: goiVip.thoi_han,
-            trang_thai: goiVip.trangthai,
+            trang_thai: goiVip.trang_thai,
             ngayTao: goiVip.ngayTao
         })
         return { success: true, message: response.data.success };
@@ -38,7 +38,7 @@ const postSuaGoiVip = async (goiVip: post, id: number) => {
         const response = await axiosInstance.post(`/auth/postSuaGoiVip/${id}`, {
             gia: goiVip.gia,
             thoi_han: goiVip.thoi_han,
-            trang_thai: goiVip.trangthai,
+            trang_thai: goiVip.trang_thai,
             ngayCapNhat: goiVip.ngayCapNhat
         })
         return { success: true, message: response.data.success };

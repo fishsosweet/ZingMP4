@@ -20,13 +20,21 @@ const Register = () => {
         password: '',
         password_confirmation: '',
         phone: '',
-        image: ''
+        image: '',
+        otp: ''
     });
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState('');
+    const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
 
     const validateForm = () => {
         let isValid = true;
@@ -36,7 +44,8 @@ const Register = () => {
             password: '',
             password_confirmation: '',
             phone: '',
-            image: ''
+            image: '',
+            otp: ''
         };
 
         if (!formData.name.trim()) {
@@ -99,8 +108,44 @@ const Register = () => {
                 setPreviewImage(reader.result as string);
             };
             reader.readAsDataURL(file);
+        } else if (name === 'otp') {
+            setOtp(value);
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const startCountdown = () => {
+        setCountdown(60);
+        const timer = setInterval(() => {
+            setCountdown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    const showNotificationModal = (message: string, type: 'success' | 'error') => {
+        setNotificationMessage(message);
+        setNotificationType(type);
+        setShowNotification(true);
+    };
+
+    const handleSendOtp = async () => {
+        try {
+            const response = await axiosInstance.post('/user/send-otp', {
+                email: formData.email
+            });
+            if (response.data) {
+                setOtpSent(true);
+                startCountdown();
+                showNotificationModal('Mã OTP đã được gửi đến email của bạn!', 'success');
+            }
+        } catch (error) {
+            showNotificationModal('Có lỗi xảy ra khi gửi mã OTP. Vui lòng thử lại sau.', 'error');
         }
     };
 
@@ -126,26 +171,9 @@ const Register = () => {
                 return;
             }
 
-            const formDataToSend = new FormData();
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('email', formData.email);
-            formDataToSend.append('password', formData.password);
-            formDataToSend.append('password_confirmation', formData.password_confirmation);
-            formDataToSend.append('phone', formData.phone);
-            if (formData.image) {
-                formDataToSend.append('image', formData.image);
-            }
-
-            const response = await axiosInstance.post('/user/registerUser', formDataToSend, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
-            if (response.data) {
-                alert('Đăng ký thành công! Vui lòng đăng nhập.');
-                navigate('/login-user');
-            }
+            await handleSendOtp();
+            setShowOtpModal(true);
+            setIsLoading(false);
         } catch (error: any) {
             if (error.response?.data?.errors) {
                 const serverErrors = error.response.data.errors;
@@ -154,7 +182,77 @@ const Register = () => {
                     ...serverErrors
                 }));
             } else {
-                alert('Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.');
+                showNotificationModal('Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.', 'error');
+            }
+            setIsLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (otp.length !== 6) {
+            setErrors(prev => ({
+                ...prev,
+                otp: 'Mã OTP phải có đúng 6 ký tự'
+            }));
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const verifyResponse = await axiosInstance.post('/user/verify-otp', {
+                email: formData.email,
+                otp: otp
+            });
+
+            if (verifyResponse.data) {
+                const formDataToSend = new FormData();
+                formDataToSend.append('name', formData.name);
+                formDataToSend.append('email', formData.email);
+                formDataToSend.append('password', formData.password);
+                formDataToSend.append('password_confirmation', formData.password_confirmation);
+                formDataToSend.append('phone', formData.phone);
+                if (formData.image) {
+                    formDataToSend.append('image', formData.image);
+                }
+
+                const registerResponse = await axiosInstance.post('/user/registerUser', formDataToSend, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (registerResponse.data) {
+                    showNotificationModal('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+                    setTimeout(() => {
+                        navigate('/login-user');
+                    }, 2000);
+                }
+            }
+        } catch (error: any) {
+            if (error.response?.data?.message) {
+                const errorMessage = error.response.data.message;
+                let translatedMessage = errorMessage;
+
+                switch (errorMessage) {
+                    case 'OTP has expired. Please request a new one.':
+                        translatedMessage = 'Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.';
+                        break;
+                    case 'Invalid OTP. Please try again.':
+                        translatedMessage = 'Mã OTP không đúng. Vui lòng thử lại.';
+                        break;
+                    case 'The otp field must be 6 characters.':
+                        translatedMessage = 'Mã OTP phải có đúng 6 ký tự.';
+                        break;
+                    default:
+                        translatedMessage = 'Có lỗi xảy ra khi xác thực OTP. Vui lòng thử lại sau.';
+                }
+
+                setErrors(prev => ({
+                    ...prev,
+                    otp: translatedMessage
+                }));
+            } else {
+                showNotificationModal('Có lỗi xảy ra khi xác thực OTP. Vui lòng thử lại sau.', 'error');
             }
         } finally {
             setIsLoading(false);
@@ -304,13 +402,85 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`bg-purple-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-600'
-                                }`}
+                            className={`bg-purple-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-600'}`}
                         >
                             {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
                         </button>
                     </div>
                 </form>
+
+                {/* Modal xác nhận OTP */}
+                {showOtpModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                            <h3 className="text-xl font-bold mb-4 text-gray-800">Xác nhận Email</h3>
+                            <p className="text-gray-600 mb-4">
+                                Vui lòng nhập mã OTP đã được gửi đến email {formData.email}
+                            </p>
+                            <div className="mb-4">
+                                <input
+                                    type="text"
+                                    name="otp"
+                                    value={otp}
+                                    onChange={handleChange}
+                                    maxLength={6}
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    placeholder="Nhập mã OTP (6 ký tự)"
+                                />
+                                {errors.otp && <p className="text-red-500 text-xs mt-1">{errors.otp}</p>}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={countdown > 0}
+                                    className={`text-purple-600 hover:text-purple-800 ${countdown > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {countdown > 0 ? `Gửi lại sau ${countdown}s` : 'Gửi lại mã OTP'}
+                                </button>
+                                <div className="space-x-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowOtpModal(false)}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleVerifyOtp}
+                                        disabled={isLoading}
+                                        className={`px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {isLoading ? 'Đang xử lý...' : 'Xác nhận'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showNotification && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                            <div className={`text-center ${notificationType === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                <h3 className="text-xl font-bold mb-4">
+                                    {notificationType === 'success' ? 'Thành công!' : 'Lỗi!'}
+                                </h3>
+                                <p className="text-gray-700 mb-6">{notificationMessage}</p>
+                                <button
+                                    onClick={() => setShowNotification(false)}
+                                    className={`px-4 py-2 rounded-md text-white ${notificationType === 'success'
+                                        ? 'bg-green-500 hover:bg-green-600'
+                                        : 'bg-red-500 hover:bg-red-600'
+                                        }`}
+                                >
+                                    Đóng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

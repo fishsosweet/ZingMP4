@@ -18,6 +18,10 @@ const ListPlaylist = () => {
     const [expandedPlaylistId, setExpandedPlaylistId] = useState<number | null>(null);
     const [songsMap, setSongsMap] = useState<Record<number, any[]>>({});
     const [searchTerm, setSearchTerm] = useState<string>("");
+    const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [showRemoveSongModal, setShowRemoveSongModal] = useState<boolean>(false);
+    const [removeSongData, setRemoveSongData] = useState<{ playlistId: number, songId: number } | null>(null);
 
     const handleToggleSongs = async (playlistId: number) => {
         if (expandedPlaylistId === playlistId) {
@@ -45,11 +49,14 @@ const ListPlaylist = () => {
     }
 
     const handleDelete = async (id: number) => {
-        const confirmDelete = confirm("Bạn có chắc chắn muốn xóa playlist này?");
-        if (!confirmDelete) return;
+        setDeleteId(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
         try {
-            await deletePlaylist(id);
-            alert("Đã xóa thành công");
+            await deletePlaylist(deleteId);
             if (list.length === 1 && currentPage > 1) {
                 const newPage = currentPage - 1;
                 setCurrentPage(newPage);
@@ -59,8 +66,9 @@ const ListPlaylist = () => {
                 else
                     setCurrentPage(currentPage);
             }
-
             await getData(currentPage);
+            setShowDeleteModal(false);
+            setDeleteId(null);
         } catch (error: any) {
             alert("Xóa thất bại! " + (error.message || "Lỗi không xác định"));
         }
@@ -80,16 +88,20 @@ const ListPlaylist = () => {
     };
 
     const handleRemoveSongFromPlaylist = async (playlistId: number, songId: number) => {
-        const confirmDelete = confirm("Bạn có chắc muốn xóa bài hát này khỏi playlist?");
-        if (!confirmDelete) return;
+        setRemoveSongData({ playlistId, songId });
+        setShowRemoveSongModal(true);
+    };
 
+    const confirmRemoveSong = async () => {
+        if (!removeSongData) return;
         try {
-            await deleteBaiHatOfPlaylist(playlistId, songId);
-            alert("Đã xóa bài hát khỏi playlist thành công");
+            await deleteBaiHatOfPlaylist(removeSongData.playlistId, removeSongData.songId);
             setSongsMap((prev) => ({
                 ...prev,
-                [playlistId]: prev[playlistId].filter((song) => song.id !== songId),
+                [removeSongData.playlistId]: prev[removeSongData.playlistId].filter((song) => song.id !== removeSongData.songId),
             }));
+            setShowRemoveSongModal(false);
+            setRemoveSongData(null);
         } catch (error: any) {
             alert("Xóa thất bại! " + (error.message || "Lỗi không xác định"));
         }
@@ -266,6 +278,58 @@ const ListPlaylist = () => {
                     previousClassName="prev-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     nextClassName="next-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+
+                {showDeleteModal && (
+                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full border border-blue-500">
+                            <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
+                            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa playlist này không?</p>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setDeleteId(null);
+                                    }}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors cursor-pointer"
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showRemoveSongModal && (
+                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full border border-blue-500">
+                            <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
+                            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa bài hát này khỏi playlist không?</p>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => {
+                                        setShowRemoveSongModal(false);
+                                        setRemoveSongData(null);
+                                    }}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={confirmRemoveSong}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors cursor-pointer"
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

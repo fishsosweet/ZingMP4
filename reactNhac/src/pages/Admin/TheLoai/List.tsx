@@ -11,6 +11,8 @@ const ListTheLoai = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [perPage, setPerPage] = useState<number>(10);
     const [searchTerm, setSearchTerm] = useState<string>("");
+    const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const getData = async (page: number) => {
         const res = await getListTheLoai(page, perPage);
@@ -23,11 +25,14 @@ const ListTheLoai = () => {
     }
 
     const handleDelete = async (id: number) => {
-        const confirmDelete = confirm("Bạn có chắc chắn muốn xóa thể loại này?");
-        if (!confirmDelete) return;
+        setDeleteId(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
         try {
-            await deleteTheLoai(id);
-            alert("Đã xóa thành công");
+            await deleteTheLoai(deleteId);
             if (list.length === 1 && currentPage > 1) {
                 const newPage = currentPage - 1;
                 setCurrentPage(newPage);
@@ -38,6 +43,8 @@ const ListTheLoai = () => {
                     setCurrentPage(currentPage);
             }
             await getData(currentPage);
+            setShowDeleteModal(false);
+            setDeleteId(null);
         } catch (error: any) {
             alert("Xóa thất bại! " + (error.message || "Lỗi không xác định"));
         }
@@ -167,6 +174,33 @@ const ListTheLoai = () => {
                     previousClassName="prev-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     nextClassName="next-item px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+
+     
+                {showDeleteModal && (
+                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full border border-blue-500">
+                            <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
+                            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa thể loại này không?</p>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setDeleteId(null);
+                                    }}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors cursor-pointer"
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

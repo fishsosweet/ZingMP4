@@ -32,6 +32,8 @@ const ThuVien = () => {
     const [loadingLikedSongsDetails, setLoadingLikedSongsDetails] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [playlistName, setPlaylistName] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePlaylistId, setDeletePlaylistId] = useState<number | null>(null);
 
     const { setCurrentSong, setPlaylist, setIsPlaying } = useMusic();
     const { likedSongs, isLoading: isLoadingLikedSongs } = useLikedSongs();
@@ -143,14 +145,18 @@ const ThuVien = () => {
 
     const handleDeletePlaylist = async (playlistId: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!window.confirm('Bạn có chắc chắn muốn xóa playlist này?')) {
-            return;
-        }
+        setDeletePlaylistId(playlistId);
+        setShowDeleteModal(true);
+    };
 
+    const confirmDeletePlaylist = async () => {
+        if (!deletePlaylistId) return;
         try {
-            const response = await axiosInstance.delete(`/user/deletePlaylist/${playlistId}`);
+            const response = await axiosInstance.delete(`/user/deletePlaylist/${deletePlaylistId}`);
             if (response.data) {
                 await fetchPlaylists();
+                setShowDeleteModal(false);
+                setDeletePlaylistId(null);
             }
         } catch (error) {
             console.error('Lỗi khi xóa playlist:', error);
@@ -213,6 +219,32 @@ const ThuVien = () => {
                                 className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700"
                             >
                                 Tạo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteModal && (
+                <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+                    <div className="bg-[#2a1a40] p-6 rounded-lg shadow-xl max-w-md w-full border border-purple-500">
+                        <h3 className="text-lg font-semibold mb-4">Xác nhận xóa</h3>
+                        <p className="text-gray-300 mb-6">Bạn có chắc chắn muốn xóa playlist này không?</p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setDeletePlaylistId(null);
+                                }}
+                                className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700 transition-colors cursor-pointer"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={confirmDeletePlaylist}
+                                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors cursor-pointer"
+                            >
+                                Xóa
                             </button>
                         </div>
                     </div>
